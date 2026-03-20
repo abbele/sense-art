@@ -171,10 +171,23 @@ docs(docs): update ARCHITECTURE.md with data flow diagram
 
 **Scopes**: `sense-art` · `demo-osd` · `demo-storiiies` · `ci` · `docs` · `deps` · `release`
 
-Releases are **fully automated** via `semantic-release` on push to `main`:
-- `fix:` → patch bump (0.1.0 → 0.1.1)
-- `feat:` → minor bump (0.1.0 → 0.2.0)
-- `feat!:` or `BREAKING CHANGE:` → major bump (0.1.0 → 1.0.0)
+Releases are **triggered manually** via GitHub Actions → **Release → Run workflow**. `semantic-release` analyzes commits since the last tag and determines the version bump:
+- `fix:` → patch (0.1.0 → 0.1.1)
+- `feat:` → minor (0.1.0 → 0.2.0)
+- `feat!:` or `BREAKING CHANGE:` → major (0.1.0 → 1.0.0)
+
+Each release automatically updates `CHANGELOG.md` and creates a GitHub Release with generated notes.
+
+### npm Trusted Publishing (OIDC)
+
+Publishing uses **npm Trusted Publishing** — no `NPM_TOKEN` secret required. GitHub Actions authenticates with npm via a short-lived OIDC identity token (expires after each run). Every published version includes a **provenance attestation** verifiable with `npm audit signatures sense-art`.
+
+**One-time setup on npmjs.com** (required before the first release):
+1. Profile → `sense-art` package → **Settings → Publishing → Trusted Publishers**
+2. **Add a publisher** → GitHub
+3. Owner: `micheleabbrescia` · Repository: `sense-art` · Workflow: `release.yml`
+
+No secrets to add on GitHub — `GITHUB_TOKEN` (injected automatically by Actions) is sufficient.
 
 See [ROADMAP.md](./ROADMAP.md) for the full CI/CD pipeline specification.
 
