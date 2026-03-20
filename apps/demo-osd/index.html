@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenseArt — Demo OpenSeadragon</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: system-ui, sans-serif;
+        background: #111;
+        color: #eee;
+        min-height: 100dvh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      header {
+        padding: 1rem 1.5rem;
+        background: #1a1a1a;
+        border-bottom: 1px solid #333;
+      }
+
+      header h1 { font-size: 1.1rem; font-weight: 600; }
+      header p  { font-size: 0.85rem; color: #aaa; margin-top: 0.25rem; }
+
+      .hint {
+        padding: 0.5rem 1.5rem;
+        background: #0a2a1a;
+        border-bottom: 1px solid #1a5c35;
+        font-size: 0.82rem;
+        color: #7dd4a8;
+      }
+
+      #viewer-container {
+        flex: 1;
+        position: relative;
+      }
+
+      #osd {
+        width: 100%;
+        height: 100%;
+      }
+
+      footer {
+        padding: 0.5rem 1.5rem;
+        background: #1a1a1a;
+        border-top: 1px solid #333;
+        font-size: 0.75rem;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>SenseArt — Demo OpenSeadragon</h1>
+      <p>Layer accessibilità su viewer gigapixel. Premi <kbd>Alt+A</kbd> per attivarlo.</p>
+    </header>
+
+    <div class="hint" role="note" aria-label="Istruzioni tastiera">
+      <strong>Tastiera:</strong>
+      <kbd>Alt+A</kbd> attiva/disattiva · <kbd>↑↓←→</kbd> naviga la griglia · <kbd>Esc</kbd> reset zoom · <kbd>Tab</kbd> ciclo celle
+    </div>
+
+    <main id="viewer-container">
+      <div id="osd" role="application" aria-label="Viewer opera d'arte — usa Alt+A per la navigazione accessibile"></div>
+    </main>
+
+    <footer>
+      Immagine: <em>La Ronda di Notte</em>, Rembrandt van Rijn, 1642 — Rijksmuseum, Amsterdam (dominio pubblico)
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
