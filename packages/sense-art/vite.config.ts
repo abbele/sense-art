@@ -5,6 +5,7 @@ import dts from 'vite-plugin-dts'
 export default defineConfig({
   test: {
     environment: 'jsdom',
+    setupFiles: ['src/test-setup.ts'],
     include: ['src/**/*.test.ts'],
     coverage: {
       provider: 'v8',

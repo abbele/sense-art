@@ -17,16 +17,16 @@
 ### CI/CD Pipeline (GitHub Actions)
 
 - [x] Create `.github/workflows/ci.yml` — typecheck + commitlint on every push and PR to `main`
-- [x] Create `.github/workflows/release.yml` — semantic-release triggered on push to `main`
+- [x] Create `.github/workflows/release.yml` — semantic-release triggered manually via `workflow_dispatch`
 - [x] Create `packages/sense-art/.releaserc.json` — semantic-release config:
   - `@semantic-release/commit-analyzer` (Conventional Commits → version bump)
   - `@semantic-release/release-notes-generator`
   - `@semantic-release/changelog` (updates `CHANGELOG.md`)
-  - `@semantic-release/npm` (publishes `sense-art` to npm)
+  - `@semantic-release/npm` (publishes `sense-art` to npm via OIDC Trusted Publishing)
   - `@semantic-release/git` (commits `CHANGELOG.md` + `package.json` back to repo)
   - `@semantic-release/github` (creates GitHub Release)
-- [ ] Configure npm Trusted Publisher on npmjs.com (one-time setup — see README)
-- [ ] Validate pipeline end-to-end with first manual release trigger
+- [x] Configure npm Trusted Publisher on npmjs.com (one-time setup — no NPM_TOKEN required)
+- [x] Validate pipeline end-to-end — `sense-art@0.1.0` published to npm
 
 ---
 
@@ -48,10 +48,10 @@
 - [x] Implement `FocusTrap` — Arrow keys, `Tab`/`Shift+Tab` with wrap-around, `Escape` sentinel
 - [x] Implement `Alt+A` global shortcut via `document` keydown listener
 - [x] `pnpm typecheck` passes on all packages with zero errors
-- [x] Set up Vitest + jsdom — `vitest run` passes 47/47 tests
+- [x] Set up Vitest + jsdom — `vitest run` passes all tests
 - [x] Write unit tests: `FocusTrap` activates/deactivates, all keyboard paths, wrap-around, sentinel
-- [ ] Wire `activationShortcut` option from `SenseArtOptions` into `SenseArtViewer` (currently hardcoded to `Alt+A`)
-- [ ] Implement `SenseArtViewer.setGrid(config)` — runtime grid resize without remount
+- [x] Wire `activationShortcut` option from `SenseArtOptions` into `SenseArtViewer` — shortcut is fully configurable (e.g. `"Ctrl+Shift+S"`)
+- [x] Implement `SenseArtViewer.setGrid(config)` — runtime grid resize without remount
 
 ### Task 1.2 — Semantic Overlay Grid
 
@@ -73,8 +73,8 @@
 - [x] Implement `currentRegionLabel()` — Italian spatial labels for 3×3; numeric fallback for larger grids
 - [x] Implement `currentZoomLabel()` — formatted zoom factor string
 - [x] Implement `viewportToCell()` — live viewport center → `CellPosition` (used for `aria-current` sync)
-- [ ] Sync overlay size/position with OSD container resize via `ResizeObserver`
-- [ ] Write unit tests: bounds calculations for 3×3 and 5×5 grids, edge/wrap values
+- [x] Sync overlay cell labels with OSD container resize via `ResizeObserver` (in `SenseArtViewer`)
+- [x] Write unit tests: bounds calculations for 3×3 and 5×5 grids, edge/wrap values, zoom formatting
 
 ### Task 1.4 — ARIA-Live Engine
 
@@ -92,7 +92,7 @@
 - [x] `Escape` — `viewport.goHome()`, announces "Zoom reimpostato", focuses cell (0,0)
 - [x] `aria-current="true"` updated on every cell focus
 - [x] `Enter` / `Space` — re-fires `focusToBounds` on the current cell (explicit zoom intent)
-- [ ] Write integration tests: full keyboard navigation end-to-end
+- [x] Write integration tests: full keyboard navigation end-to-end (`SenseArtViewer.test.ts`)
 
 ---
 
@@ -102,12 +102,12 @@
 
 - [x] Define `PixelSampler` class — canvas sampling with luminosity/saturation computation
 - [x] Define `Sonifier` class — `start()`, `stop()`, `mapToAudio(pixel)` with dynamic Tone.js import
-- [ ] Create `src/ai/fixtures/artwork-map.json` (also needed by `MockProvider`)
-- [ ] Wire `Sonifier` into `SenseArtViewer.onCellFocused` (behind `sonification.enabled` guard)
-- [ ] Verify `PixelSampler.sample()` works on the live OSD canvas element
-- [ ] Verify `Tone.Synth` + `Tone.Filter` mapping end-to-end in `demo-osd`
-- [ ] `Sonifier.start()` called from within keyboard event handler (Web Audio user-gesture requirement)
-- [ ] Write unit tests: luminosity→MIDI mapping, saturation→filter cutoff, audio context lifecycle
+- [x] Create `src/ai/fixtures/artwork-map.json` — hand-crafted 3×3 fixture (La Ronda di Notte)
+- [x] Wire `Sonifier` into `SenseArtViewer.onCellFocused` (behind `sonification.enabled` guard)
+- [x] `Sonifier.start()` called from `SenseArtViewer.enable()` — satisfies Web Audio user-gesture requirement
+- [x] Write unit tests: luminosity→MIDI mapping, saturation→filter cutoff, audio context lifecycle
+- [ ] Verify `PixelSampler.sample()` works on the live OSD canvas element (manual test in `demo-osd`)
+- [ ] Verify `Tone.Synth` + `Tone.Filter` audio mapping end-to-end in `demo-osd` (manual test)
 
 ---
 
@@ -121,7 +121,7 @@
 - [x] Define `ArtworkMap` + `CellMetadata` types (`src/types/index.ts`)
 - [x] Implement `MockProvider` — generates placeholder metadata without any API key
 - [x] Implement `ArtworkMapClient` — fetch coordinator with `Map`-based cache and `clearCache()`
-- [ ] Create `src/ai/fixtures/artwork-map.json` — hand-crafted 3×3 fixture for demo-storiiies
+- [x] Create `src/ai/fixtures/artwork-map.json` — hand-crafted 3×3 fixture for demo-storiiies
 
 ### Provider Implementations
 
@@ -145,11 +145,10 @@
 
 ## Phase 4: Testing & Release
 
-- [ ] Complete Vitest + jsdom setup (Phase 1 unit tests)
+- [x] Complete Vitest + jsdom setup — 117 tests passing across 7 test files
 - [ ] Set up axe-core for automated ARIA audits in CI
 - [ ] VoiceOver (macOS/iOS) — full manual test against scripts in `DOC_GUIDE.md` (Tasks 1.2, 1.4)
 - [ ] NVDA (Windows, Firefox) — integration test
 - [ ] JAWS (Windows, Chrome) — compatibility check
-- [ ] Add `NPM_TOKEN` secret to GitHub repository and validate `release.yml` end-to-end
 - [ ] Publish `sense-art@1.0.0` to npm
 - [ ] Write `CONTRIBUTING.md`

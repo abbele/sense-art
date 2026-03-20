@@ -55,8 +55,8 @@ SenseArtViewer              ← public API, orchestrator, lifecycle manager
 ├── AriaLiveEngine          ← singleton aria-live region, debounced announcements
 └── FocusTrap               ← keyboard event interception (Arrow, Tab, Escape)
 
-Audio layer (Phase 2, dynamic import):
-Sonifier                    ← Tone.js audio engine
+Audio layer (Phase 2, wired):
+Sonifier                    ← Tone.js audio engine (dynamic import, lazily started)
 └── PixelSampler            ← canvas pixel extraction + luminosity/saturation computation
 
 AI layer (Phase 3, pluggable):
@@ -79,16 +79,22 @@ ArtworkMapClient            ← fetch + cache coordinator
 class SenseArtViewer {
   constructor(viewer: OpenSeadragon.Viewer, options?: SenseArtOptions)
 
-  mount(): void     // inject overlay, register Alt+A keydown listener on document
-  unmount(): void   // destroy overlay, remove all event listeners
-  enable(): void    // activate focus trap, announce activation via aria-live
-  disable(): void   // deactivate focus trap, announce deactivation
-  toggle(): void    // called internally by Alt+A handler
-  // setGrid(config: GridConfig): void  ← [planned] runtime grid resize
+  mount(): void                   // inject overlay, register shortcut listener, start ResizeObserver
+  unmount(): void                 // destroy overlay, remove all event listeners
+  enable(): void                  // activate focus trap, start Sonifier (if enabled), announce
+  disable(): void                 // deactivate focus trap, announce deactivation
+  toggle(): void                  // called internally by shortcut handler
+  setGrid(config: GridConfig): void // runtime grid resize without remount
 }
 ```
 
 **Responsibilities**: lifecycle management, wiring sub-modules, handling the `Escape` reset-zoom sentinel from `FocusTrap`, exposing the public API surface.
+
+**`activationShortcut`** (`SenseArtOptions.activationShortcut`): any `"Modifier+Key"` string (e.g., `"Alt+A"`, `"Ctrl+Shift+S"`). Parsed once in the constructor into a `ParsedShortcut` struct and matched against `KeyboardEvent` properties in the `document` keydown listener.
+
+**`ResizeObserver`**: started in `mount()`, disconnected in `unmount()`. On every container resize, all cell labels (which include the current zoom level) are refreshed via `A11yOverlay.updateCellLabel()`.
+
+**Sonifier wiring**: when `sonification.enabled` is true, a `Sonifier` instance is created in `mount()`. `Sonifier.start()` is called inside `enable()` — which is always invoked from a keyboard event handler, satisfying the Web Audio user-gesture requirement. After each cell focus, `sonifyCell()` lazily initialises a `PixelSampler` on the first OSD `<canvas>` child and calls `Sonifier.mapToAudio()` with the sampled pixel data.
 
 ---
 
@@ -195,7 +201,7 @@ class FocusTrap {
 
 ---
 
-### `Sonifier` (Phase 2)
+### `Sonifier`
 
 ```typescript
 class Sonifier {
@@ -207,7 +213,9 @@ class Sonifier {
 }
 ```
 
-**Audio mapping**: Luminosity (0–255) → MIDI note 36–84 (C2–C6). Saturation (0–100%) → low-pass filter cutoff (200Hz–8000Hz). Tone.js is **dynamically imported** to keep the Phase 1 bundle clean.
+**Audio mapping**: Luminosity (0–255) → MIDI note 36–84 (C2–C6). Saturation (0–100%) → low-pass filter cutoff (200Hz–8000Hz). Tone.js is **dynamically imported** to keep the bundle lean when sonification is disabled.
+
+**Lifecycle**: `SenseArtViewer.enable()` calls `start()` (from within a keyboard event handler, satisfying the Web Audio autoplay policy). Each cell focus triggers `mapToAudio()` with data from `PixelSampler`. `stop()` resets the started flag; a subsequent `enable()` call will restart the context.
 
 ---
 

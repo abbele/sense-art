@@ -1,0 +1,73 @@
+{
+  "cells": [
+    [
+      {
+        "row": 0,
+        "col": 0,
+        "interestScore": 0.42,
+        "label": "Alto-Sinistra — ombra profonda, architettura sullo sfondo",
+        "sensoryTags": ["scuro", "freddo", "testurizzato", "architettura"]
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "interestScore": 0.61,
+        "label": "Alto-Centro — volti emergenti dall'oscurità",
+        "sensoryTags": ["contrasto", "volti", "freddo", "sfumato"]
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "interestScore": 0.53,
+        "label": "Alto-Destra — lanciere con bandiera, cielo scuro",
+        "sensoryTags": ["movimento", "caldo", "tessuto", "verticale"]
+      }
+    ],
+    [
+      {
+        "row": 1,
+        "col": 0,
+        "interestScore": 0.55,
+        "label": "Centro-Sinistra — tamburo e miliziani in ombra",
+        "sensoryTags": ["scuro", "ritmo", "testurizzato", "freddo"]
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "interestScore": 0.95,
+        "label": "Centro — capitano Cocq e luogotenente van Ruytenburch, figure principali",
+        "sensoryTags": ["caldo", "contrasto", "volti", "abiti", "luce"]
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "interestScore": 0.72,
+        "label": "Centro-Destra — miliziani armati, luce laterale",
+        "sensoryTags": ["freddo", "metallo", "movimento", "ombra"]
+      }
+    ],
+    [
+      {
+        "row": 2,
+        "col": 0,
+        "interestScore": 0.38,
+        "label": "Basso-Sinistra — pavimentazione e piedi in movimento",
+        "sensoryTags": ["scuro", "pietra", "movimento", "freddo"]
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "interestScore": 0.79,
+        "label": "Basso-Centro — fanciulla in giallo con pollo bianco, simbolo araldico",
+        "sensoryTags": ["caldo", "luminoso", "misterioso", "simbolico"]
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "interestScore": 0.44,
+        "label": "Basso-Destra — cane, pavimentazione, ombra proiettata",
+        "sensoryTags": ["scuro", "animale", "pietra", "basso-contrasto"]
+      }
+    ]
+  ]
+}
