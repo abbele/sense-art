@@ -122,7 +122,7 @@ class A11yOverlay {
 </div>
 ```
 
-> **Known gap (Task 1.2)**: WAI-ARIA 1.2 Grid Pattern requires `<div role="row">` wrappers between the grid and the gridcell elements. The current implementation uses CSS `display:grid` directly without row containers, which VoiceOver and NVDA may not parse correctly. Fix tracked in ROADMAP.md Task 1.2.
+> **Compliant**: each row is wrapped in `<div role="row" style="display:contents">`. `display:contents` removes the div from the CSS box model so the grid layout is unaffected, while preserving the required ARIA nesting for VoiceOver and NVDA.
 
 ---
 
@@ -189,7 +189,7 @@ class FocusTrap {
 | `Tab` | Next cell linearly (all cells, wraps) |
 | `Shift+Tab` | Previous cell linearly (wraps) |
 | `Escape` | Fires callback with sentinel `(-1, -1)` → `SenseArtViewer` calls `viewport.goHome()` |
-| `Enter` / `Space` | `[planned]` — zoom into focused cell |
+| `Enter` / `Space` | Re-fires callback on current cell → `SenseArtViewer` calls `focusToBounds()` again (explicit zoom) |
 
 `Alt+A` is handled at the `SenseArtViewer` level via a `document` keydown listener — not inside `FocusTrap`.
 

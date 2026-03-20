@@ -25,8 +25,8 @@
   - `@semantic-release/npm` (publishes `sense-art` to npm)
   - `@semantic-release/git` (commits `CHANGELOG.md` + `package.json` back to repo)
   - `@semantic-release/github` (creates GitHub Release)
-- [ ] Add `NPM_TOKEN` secret to GitHub repository Settings → Secrets → Actions
-- [ ] Validate pipeline end-to-end with a `fix:` commit on `main`
+- [ ] Configure npm Trusted Publisher on npmjs.com (one-time setup — see README)
+- [ ] Validate pipeline end-to-end with first manual release trigger
 
 ---
 
@@ -48,10 +48,10 @@
 - [x] Implement `FocusTrap` — Arrow keys, `Tab`/`Shift+Tab` with wrap-around, `Escape` sentinel
 - [x] Implement `Alt+A` global shortcut via `document` keydown listener
 - [x] `pnpm typecheck` passes on all packages with zero errors
+- [x] Set up Vitest + jsdom — `vitest run` passes 47/47 tests
+- [x] Write unit tests: `FocusTrap` activates/deactivates, all keyboard paths, wrap-around, sentinel
 - [ ] Wire `activationShortcut` option from `SenseArtOptions` into `SenseArtViewer` (currently hardcoded to `Alt+A`)
 - [ ] Implement `SenseArtViewer.setGrid(config)` — runtime grid resize without remount
-- [ ] Set up Vitest + jsdom
-- [ ] Write unit tests: `FocusTrap` activates/deactivates, keyboard events fire callbacks correctly
 
 ### Task 1.2 — Semantic Overlay Grid
 
@@ -63,8 +63,8 @@
 - [x] Implement `setCurrentCell()` — `aria-current="true"` on active cell
 - [x] Implement `setRovingFocus()` — roving tabindex (single `tabindex="0"` at a time)
 - [x] Visible focus ring (3px solid `#005fcc`) for sighted keyboard users
-- [ ] **ARIA violation fix**: add `<div role="row">` wrappers — required by WAI-ARIA 1.2 Grid Pattern
-- [ ] Write unit tests: ARIA roles/nesting, cell count, label content, `aria-current` toggling
+- [x] **ARIA violation fix**: add `<div role="row" style="display:contents">` wrappers — WAI-ARIA 1.2 Grid Pattern compliant
+- [x] Write unit tests: ARIA roles/nesting, cell count, label content, `aria-current` toggling (17 tests)
 
 ### Task 1.3 — Coordinate Mapper
 
@@ -83,7 +83,7 @@
 - [x] `announceZoom(zoomLevel, regionLabel)` — "Ingrandimento {n}x. Area: {region}"
 - [x] `announceCell(row, col, label)` — "Riga {r}, Colonna {c} — {label}"
 - [x] `destroy()` — removes region, clears pending debounce timer
-- [ ] Write unit tests: message strings, debounce collapses rapid calls, `assertive` path
+- [x] Write unit tests: message strings, debounce collapses rapid calls, `assertive` path (14 tests)
 
 ### Task 1.5 — Spatial Navigation
 
@@ -91,7 +91,7 @@
 - [x] `Tab` / `Shift+Tab` linear cycle
 - [x] `Escape` — `viewport.goHome()`, announces "Zoom reimpostato", focuses cell (0,0)
 - [x] `aria-current="true"` updated on every cell focus
-- [ ] `Enter` / `Space` — zoom into focused cell
+- [x] `Enter` / `Space` — re-fires `focusToBounds` on the current cell (explicit zoom intent)
 - [ ] Write integration tests: full keyboard navigation end-to-end
 
 ---

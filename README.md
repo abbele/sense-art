@@ -120,7 +120,7 @@ senseArt.enable()  // or press Alt+A to toggle
 | `Arrow keys` | Move between grid cells (with wrap-around) | Implemented |
 | `Tab` / `Shift+Tab` | Cycle linearly through all cells | Implemented |
 | `Escape` | Reset zoom to full image, return to cell (0,0) | Implemented |
-| `Enter` / `Space` | Zoom into focused cell | Planned (Task 1.5) |
+| `Enter` / `Space` | Zoom into focused cell (explicit intent) | Implemented |
 
 ---
 
