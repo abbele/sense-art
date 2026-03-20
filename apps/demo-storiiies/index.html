@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SenseArt — Demo Storiiies (Linear Tour + Free Navigation)</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        font-family: system-ui, sans-serif;
+        background: #111;
+        color: #eee;
+        min-height: 100dvh;
+        display: grid;
+        grid-template-rows: auto auto 1fr auto;
+      }
+
+      header {
+        padding: 1rem 1.5rem;
+        background: #1a1a1a;
+        border-bottom: 1px solid #333;
+      }
+
+      header h1 { font-size: 1.1rem; font-weight: 600; }
+      header p  { font-size: 0.85rem; color: #aaa; margin-top: 0.25rem; }
+
+      /* Storiiies-style annotation panel */
+      #annotation-panel {
+        padding: 0.75rem 1.5rem;
+        background: #16213e;
+        border-bottom: 1px solid #2a3f6b;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      #annotation-text {
+        flex: 1;
+        font-size: 0.9rem;
+        color: #c8d8f8;
+        font-style: italic;
+      }
+
+      .tour-controls {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .tour-btn {
+        padding: 0.4rem 0.9rem;
+        background: #2a4080;
+        border: 1px solid #4a6aba;
+        color: #c8d8f8;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.82rem;
+      }
+
+      .tour-btn:hover { background: #3a50a0; }
+
+      .tour-btn:focus-visible {
+        outline: 2px solid #7aa8ff;
+        outline-offset: 2px;
+      }
+
+      #step-counter {
+        font-size: 0.8rem;
+        color: #7aa8ff;
+        white-space: nowrap;
+      }
+
+      /* Agency banner */
+      #agency-banner {
+        padding: 0.4rem 1.5rem;
+        background: #0a2a1a;
+        border-bottom: 1px solid #1a5c35;
+        font-size: 0.8rem;
+        color: #7dd4a8;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+      }
+
+      #viewer-container {
+        position: relative;
+      }
+
+      #osd {
+        width: 100%;
+        height: 100%;
+      }
+
+      footer {
+        padding: 0.5rem 1.5rem;
+        background: #1a1a1a;
+        border-top: 1px solid #333;
+        font-size: 0.75rem;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>SenseArt — Linear Tour + Esplorazione Libera</h1>
+      <p>Il tour guidato (stile Storiiies) convive con la griglia semantica per l'esplorazione autonoma.</p>
+    </header>
+
+    <!-- Simulated Storiiies panel -->
+    <section id="annotation-panel" aria-label="Tour guidato dell'opera">
+      <p id="annotation-text" aria-live="polite" aria-atomic="true">
+        Benvenuto nel tour di <em>La Ronda di Notte</em>. Premi "Avanti" per iniziare.
+      </p>
+      <div class="tour-controls" role="group" aria-label="Controlli tour">
+        <button class="tour-btn" id="btn-prev" aria-label="Passo precedente del tour">← Indietro</button>
+        <span id="step-counter" aria-live="polite" aria-atomic="true">0 / 5</span>
+        <button class="tour-btn" id="btn-next" aria-label="Passo successivo del tour">Avanti →</button>
+      </div>
+    </section>
+
+    <!-- SenseArt agency layer notice -->
+    <div id="agency-banner" role="note">
+      <strong>Esplorazione libera:</strong>
+      <span>Premi <kbd>Alt+A</kbd> in qualsiasi momento per uscire dal tour e navigare l'opera autonomamente con le frecce direzionali.</span>
+    </div>
+
+    <main id="viewer-container">
+      <div id="osd" role="application" aria-label="Viewer opera d'arte — usa Alt+A per la navigazione accessibile"></div>
+    </main>
+
+    <footer>
+      Immagine: <em>La Ronda di Notte</em>, Rembrandt van Rijn, 1642 — Rijksmuseum, Amsterdam (dominio pubblico)
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
