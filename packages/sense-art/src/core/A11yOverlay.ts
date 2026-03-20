@@ -23,8 +23,11 @@ export class A11yOverlay {
    *
    * @accessibility
    * - Creates `<div role="grid" aria-label="Navigazione opera d'arte">`.
-   * - Populates with `role="row"` wrappers each containing `role="gridcell"` buttons.
-   * - The first cell (0,0) receives `tabindex="0"` (roving tabindex pattern); all others get `-1`.
+   * - Each row is wrapped in `<div role="row" style="display:contents">` — required
+   *   by WAI-ARIA 1.2 Grid Pattern. `display:contents` makes the wrapper invisible
+   *   to CSS layout while preserving the ARIA tree structure (VoiceOver/NVDA compliant).
+   * - Each cell is `<button role="gridcell">` inside its row wrapper.
+   * - The first cell (0,0) receives `tabindex="0"` (roving tabindex); all others get `-1`.
    * - `aria-rowcount` and `aria-colcount` reflect the configured grid dimensions.
    */
   render(getCellLabel: (row: number, col: number) => string): void {
@@ -50,6 +53,14 @@ export class A11yOverlay {
     this.cells = []
 
     for (let r = 0; r < this.grid.rows; r++) {
+      // role="row" wrapper — required by WAI-ARIA 1.2 Grid Pattern.
+      // display:contents removes it from the box model so CSS grid still
+      // treats the buttons as direct grid children.
+      const rowEl = document.createElement('div')
+      rowEl.setAttribute('role', 'row')
+      rowEl.setAttribute('aria-rowindex', String(r + 1))
+      rowEl.style.display = 'contents'
+
       const rowCells: GridCell[] = []
 
       for (let c = 0; c < this.grid.columns; c++) {
@@ -69,7 +80,6 @@ export class A11yOverlay {
           cursor: 'default',
           width: '100%',
           height: '100%',
-          // Visible focus ring for sighted keyboard users
           outline: 'none',
         })
         btn.addEventListener('focus', () => {
@@ -80,11 +90,11 @@ export class A11yOverlay {
           btn.style.outline = 'none'
         })
 
-        this.root!.appendChild(btn)
-
+        rowEl.appendChild(btn)
         rowCells.push({ element: btn, position: { row: r, col: c }, label })
       }
 
+      this.root.appendChild(rowEl)
       this.cells.push(rowCells)
     }
 
