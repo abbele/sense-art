@@ -1,0 +1,56 @@
+{
+  "name": "sense-art",
+  "version": "0.1.0",
+  "description": "Universal accessibility layer for gigapixel art viewers (OpenSeadragon). Semantic grid, color sonification, AI mental maps.",
+  "author": "Michele Abbrescia",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/sense-art.umd.js",
+  "module": "./dist/sense-art.es.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/sense-art.es.js",
+      "require": "./dist/sense-art.umd.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "openseadragon",
+    "gigapixel",
+    "screen-reader",
+    "aria",
+    "sonification",
+    "art"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.build.json --noEmit && vite build",
+    "build:types": "tsc -p tsconfig.build.json",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "openseadragon": ">=4.0.0",
+    "tone": ">=14.0.0"
+  },
+  "dependencies": {
+    "openseadragon": "^6.0.2",
+    "tone": "^15.1.22"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@types/openseadragon": "^5.0.2",
+    "semantic-release": "^24.2.5",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.1",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}
