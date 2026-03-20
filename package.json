@@ -1,15 +1,21 @@
 {
-  "name": "aria-osd",
+  "name": "sense-art-monorepo",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "description": "SenseArt monorepo — library + demo apps",
+  "author": "Michele Abbrescia",
+  "license": "MIT",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "pnpm -r --filter='./packages/*' build",
+    "dev:osd": "pnpm --filter=@sense-art/demo-osd dev",
+    "dev:storiiies": "pnpm --filter=@sense-art/demo-storiiies dev",
+    "typecheck": "pnpm -r typecheck",
+    "prepare": "husky"
   },
   "devDependencies": {
-    "typescript": "~5.9.3",
-    "vite": "^8.0.1"
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "husky": "^9.1.7",
+    "typescript": "~5.9.3"
   }
 }
