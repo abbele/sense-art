@@ -31,6 +31,9 @@ jobs:
       - name: Typecheck all packages
         run: pnpm typecheck
 
+      - name: Run unit tests
+        run: pnpm --filter=sense-art test
+
   commitlint:
     name: Lint commit messages
     runs-on: ubuntu-latest
