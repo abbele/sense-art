@@ -101,6 +101,14 @@ export class FocusTrap {
         e.preventDefault()
         e.shiftKey ? this.movLinear(-1) : this.movLinear(1)
         break
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        // Re-fire callbacks on the current cell to trigger focusToBounds explicitly.
+        // Semantics: "zoom into this cell" as a deliberate user action (distinct from
+        // the passive zoom that happens on arrow-key navigation).
+        this.focusCallbacks.forEach((cb) => cb(this.currentRow, this.currentCol))
+        break
       case 'Escape':
         e.preventDefault()
         this.focusCallbacks.forEach((cb) => cb(-1, -1)) // sentinel: reset signal
