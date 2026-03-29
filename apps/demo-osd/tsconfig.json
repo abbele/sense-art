@@ -13,7 +13,10 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "sense-art": ["../../packages/sense-art/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
