@@ -39,5 +39,6 @@ jobs:
         working-directory: packages/sense-art
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'   # abilita npm provenance via OIDC (Trusted Publishing)
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: 'true'   # firma il pacchetto con OIDC (provenance attestation)
         run: pnpm exec semantic-release
