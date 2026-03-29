@@ -10,7 +10,6 @@ const config: UserConfig = {
       [
         'sense-art',   // packages/sense-art
         'demo-osd',    // apps/demo-osd
-        'demo-storiiies', // apps/demo-storiiies
         'ci',          // github actions / release pipeline
         'docs',        // README, ARCHITECTURE, ROADMAP, DOC_GUIDE
         'deps',        // dependency updates

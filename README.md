@@ -14,9 +14,9 @@ OpenSeadragon renders everything onto a `<canvas>` element. From an assistive te
 
 Referenced upstream issues: [openseadragon#1478](https://github.com/openseadragon/openseadragon/issues/1478), [openseadragon#628](https://github.com/openseadragon/openseadragon/issues/628).
 
-### 2. The Storiiies Linearity Problem
+### 2. The Linearity Problem
 
-[Storiiies by Cogapp](https://storiiies.cogapp.com/) solved annotation-driven tours beautifully — but only for sighted users following a curator-defined path. A blind user has no *agency*: they can only listen to the sequence chosen for them. There is no way to say "I want to explore the top-left corner" or "take me to the highest-detail area".
+Annotation-driven tour tools solve the narration problem — but only for sighted users following a curator-defined path. A blind user has no *agency*: they can only listen to the sequence chosen for them. There is no way to say "I want to explore the top-left corner" or "take me to the highest-detail area".
 
 ---
 
@@ -53,8 +53,7 @@ sense-art/
 ├── packages/
 │   └── sense-art/          ← the published npm library
 ├── apps/
-│   ├── demo-osd/           ← demo: raw OSD viewer + SenseArt (port 5173)
-│   └── demo-storiiies/     ← demo: Storiiies-style linear tour + SenseArt (port 5174)
+│   └── demo-osd/           ← demo: raw OSD viewer + SenseArt (port 5173)
 ├── .github/
 │   └── workflows/
 │       ├── ci.yml          ← typecheck + commitlint on every push/PR
@@ -75,9 +74,6 @@ pnpm build
 
 # Run the OSD demo (localhost:5173)
 pnpm dev:osd
-
-# Run the Storiiies demo (localhost:5174)
-pnpm dev:storiiies
 
 # Typecheck all packages
 pnpm typecheck
@@ -151,9 +147,9 @@ interface SenseArtOptions {
     toneDurationMs?: number  // default: 800ms
   }
   ai?: {
-    provider?: 'mock' | 'gemini' | 'openai' | 'huggingface' | 'ollama'  // default: 'gemini'
-    apiKey?: string    // required for 'gemini' and 'openai'
-    model?: string     // overrides per-provider default (e.g. 'gemini-1.5-pro')
+    provider?: 'mock' | 'gemini' | 'groq' | 'openai' | 'huggingface' | 'ollama'
+    apiKey?: string    // required for cloud providers; use env vars, never hardcode
+    model?: string     // overrides per-provider default
     baseUrl?: string   // custom endpoint (Ollama, Vertex AI, etc.)
     imageUrl?: string  // fallback when canvas is unavailable
   }
@@ -183,7 +179,7 @@ fix(sense-art): correct role="row" nesting in A11yOverlay
 docs(docs): update ARCHITECTURE.md with data flow diagram
 ```
 
-**Scopes**: `sense-art` · `demo-osd` · `demo-storiiies` · `ci` · `docs` · `deps` · `release`
+**Scopes**: `sense-art` · `demo-osd` · `ci` · `docs` · `deps` · `release`
 
 Releases are **triggered manually** via GitHub Actions → **Release → Run workflow**. `semantic-release` analyzes commits since the last tag and determines the version bump:
 - `fix:` → patch (0.1.0 → 0.1.1)

@@ -36,7 +36,7 @@ export interface ArtworkMapOptions {
    * AI provider to use. Default: `'gemini'`.
    * Use `'mock'` for development/testing (no API key required).
    */
-  provider?: 'mock' | 'gemini' | 'openai' | 'huggingface' | 'ollama'
+  provider?: 'mock' | 'gemini' | 'groq' | 'openai' | 'huggingface' | 'ollama'
   /** API key for the selected provider. Not required for `'mock'` or `'ollama'`. */
   apiKey?: string
   /**

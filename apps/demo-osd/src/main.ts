@@ -37,9 +37,10 @@ const viewer = OpenSeadragon({
 const senseArt = new SenseArtViewer(viewer, {
   grid: { rows: 3, columns: 3 },
   sonification: { enabled: true },
-  // AI label hydration: uses mock fixture by default (no API key needed).
-  // To use Gemini: set provider: 'gemini', apiKey: 'AIza...'
-  ai: { provider: 'mock' },
+  ai: {
+    provider: (import.meta.env.VITE_AI_PROVIDER ?? 'mock') as 'mock' | 'gemini' | 'groq' | 'openai' | 'huggingface' | 'ollama',
+    apiKey: import.meta.env.VITE_AI_API_KEY ?? '',
+  }
 })
 
 // Mount on OSD ready (canvas must exist before overlay is injected)
@@ -54,23 +55,6 @@ viewer.addOnceHandler('open', () => {
     senseArt.toggle()
     toggleBtn.textContent = toggleBtn.textContent === 'Attiva layer' ? 'Disattiva layer' : 'Attiva layer'
   })
-})
-
-// ─── AI loading indicator ─────────────────────────────────────────────────────
-
-const aiStatus = document.getElementById('ai-status') as HTMLSpanElement
-const aiReady  = document.getElementById('ai-ready')  as HTMLSpanElement
-
-const osdEl = document.getElementById('osd') as HTMLElement
-osdEl.addEventListener('senseArt:ai-loading', () => {
-  aiStatus.style.display = 'inline'
-  aiReady.style.display  = 'none'
-})
-osdEl.addEventListener('senseArt:ai-ready', () => {
-  aiStatus.style.display = 'none'
-  aiReady.style.display  = 'inline'
-  // Hide the "ready" badge after 3s so it doesn't clutter the UI
-  setTimeout(() => { aiReady.style.display = 'none' }, 3000)
 })
 
 // Expose to browser console for manual testing

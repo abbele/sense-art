@@ -8,6 +8,7 @@ import { PixelSampler } from './audio/PixelSampler.js'
 import { ArtworkMapClient } from './ai/ArtworkMapClient.js'
 import { MockProvider } from './ai/MockProvider.js'
 import { GeminiProvider } from './ai/GeminiProvider.js'
+import { GroqProvider } from './ai/GroqProvider.js'
 
 const DEFAULT_GRID: GridConfig = { rows: 3, columns: 3 }
 
@@ -138,13 +139,24 @@ export class SenseArtViewer {
     if (!this.mounted) this.mount()
     if (this.enabled) return
     // start() must be called within a user gesture handler (Web Audio requirement).
-    // enable() is called from the keyboard shortcut handler, satisfying this constraint.
     void this.sonifier?.start()
     this.mapper!.snapshotViewport()
-    // Re-hydrate AI labels on every enable() so descriptions match the current
-    // viewport. The canvas toDataURL captures exactly what the user sees now.
     this.mapClient?.clearCache()
-    void this.hydrateAILabels()
+    this.enabled = true
+
+    if (this.aiOptions) {
+      // Show loading banner and defer grid activation until AI labels are ready.
+      this.showAILoadingBanner()
+      void this.hydrateAILabels().then(() => {
+        this.hideAILoadingBanner()
+        if (this.enabled) this.activateGrid()
+      })
+    } else {
+      this.activateGrid()
+    }
+  }
+
+  private activateGrid(): void {
     this.overlay!.setInteractive(true)
     this.focusTrap!.activate()
     // Focus cell (0,0) so the user sees the grid immediately and keyboard events
@@ -155,7 +167,6 @@ export class SenseArtViewer {
     this.liveEngine!.announce(
       "Layer accessibilità attivato. Usa le frecce per navigare l'opera.",
     )
-    this.enabled = true
   }
 
   /**
@@ -257,10 +268,45 @@ export class SenseArtViewer {
         }
         return new GeminiProvider({ apiKey: opt.apiKey, model: opt.model, baseUrl: opt.baseUrl })
       }
+      case 'groq': {
+        if (!opt.apiKey) {
+          console.warn('SenseArt: GroqProvider requires options.ai.apiKey')
+          return null
+        }
+        return new GroqProvider({ apiKey: opt.apiKey, model: opt.model, baseUrl: opt.baseUrl })
+      }
       default:
         console.warn(`SenseArt: unknown AI provider '${providerName as string}'`)
         return null
     }
+  }
+
+  private showAILoadingBanner(): void {
+    const container = this.viewer.element as HTMLElement
+    const banner = document.createElement('div')
+    banner.id = 'sa-ai-loading-banner'
+    banner.setAttribute('aria-live', 'polite')
+    banner.setAttribute('aria-atomic', 'true')
+    banner.textContent = '⏳ AI sta analizzando la vista…'
+    Object.assign(banner.style, {
+      position: 'absolute',
+      top: '0',
+      left: '0',
+      width: '100%',
+      padding: '0.6rem 1rem',
+      background: 'rgba(0,0,0,0.65)',
+      color: '#f0c040',
+      fontSize: '0.85rem',
+      textAlign: 'center',
+      zIndex: '20',
+      pointerEvents: 'none',
+    })
+    container.appendChild(banner)
+  }
+
+  private hideAILoadingBanner(): void {
+    const container = this.viewer.element as HTMLElement
+    container.querySelector('#sa-ai-loading-banner')?.remove()
   }
 
   private async hydrateAILabels(): Promise<void> {
@@ -273,7 +319,7 @@ export class SenseArtViewer {
     container.dispatchEvent(new CustomEvent('senseArt:ai-loading', { bubbles: true }))
 
     try {
-      // Use the current OSD canvas as image source so Gemini sees exactly the
+      // Use the current OSD canvas as image source so the AI sees exactly the
       // viewport the user has open (works after zooming in too).
       const canvas = container.querySelector<HTMLCanvasElement>('canvas')
       const imageUrl = canvas?.toDataURL('image/jpeg', 0.85) ?? this.aiOptions.imageUrl ?? ''

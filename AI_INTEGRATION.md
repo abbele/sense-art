@@ -34,7 +34,8 @@ SenseArtViewer
 └── ArtworkMapClient          ← orchestratore, gestisce cache
     └── ArtworkMapProvider    ← interfaccia pluggabile
         ├── MockProvider      ← fixture JSON, nessuna API key
-        ├── GeminiProvider    ← Gemini 1.5 Flash (free tier)
+        ├── GeminiProvider    ← Gemini 2.0 Flash (free tier)
+        ├── GroqProvider      ← Llama 4 Scout via Groq (free tier, ultra-fast)
         ├── OpenAIProvider    ← GPT-4o (planned)
         ├── HuggingFaceProvider ← LLaVA (planned)
         └── OllamaProvider    ← locale, privacy-preserving (planned)
@@ -80,56 +81,62 @@ interface ArtworkMap {
 const senseArt = new SenseArtViewer(viewer, {
   grid: { rows: 3, columns: 3 },
   ai: {
-    imageUrl: 'https://example.com/artwork.jpg',  // immagine da analizzare
-    provider: 'gemini',                           // default: 'gemini' — vedi opzioni sotto
-    apiKey: 'AIza...',                            // chiave API (non richiesta per 'mock')
-    model: 'gemini-1.5-flash',                   // default: 'gemini-1.5-flash', sovrascrivibile
+    provider: 'gemini',
+    apiKey: import.meta.env.VITE_GEMINI_API_KEY,  // ← variabile d'ambiente, mai hardcoded
   },
 })
 ```
+
+> **Sicurezza**: non inserire mai l'`apiKey` come stringa letterale nel codice sorgente. Vedi la sezione [Sicurezza e privacy](#sicurezza-e-privacy) per i dettagli.
 
 #### Provider disponibili e relativi default
 
 | `provider` | `model` default | `apiKey` | Note |
 |---|---|---|---|
 | `'mock'` | — | non richiesta | Fixture locale, zero latenza, per dev/test/CI |
-| `'gemini'` (**default**) | `gemini-1.5-flash` | Google AI Studio | Free tier: 15 RPM, 1M token/giorno |
+| `'gemini'` | `gemini-2.0-flash` | Google AI Studio | Free tier: 15 RPM, 1M token/giorno |
+| `'groq'` | `meta-llama/llama-4-scout-17b-16e-instruct` | console.groq.com | Free tier generoso, latenza ultra-bassa |
 | `'openai'` | `gpt-4o` | OpenAI | Massima qualità, a pagamento |
 | `'huggingface'` | `llava-hf/llava-1.5-7b-hf` | HuggingFace | Free tier, latenza variabile |
 | `'ollama'` | `llava:13b` | non richiesta | Locale, privacy-preserving |
 
-#### Cambiare modello e client
+#### Esempi di configurazione per provider
 
-Per usare un modello diverso di Gemini (es. `gemini-1.5-pro` per qualità superiore, o `gemini-2.0-flash` quando disponibile):
-
+**Gemini** (Google AI Studio — free tier):
 ```typescript
 ai: {
   provider: 'gemini',
-  model: 'gemini-1.5-pro',   // sovrascrive il default 'gemini-1.5-flash'
-  apiKey: 'AIza...',
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+  // model opzionale — default: 'gemini-2.0-flash'
 }
 ```
 
-Per usare un endpoint compatibile con l'API Gemini ma ospitato altrove (es. Vertex AI):
+**Groq** (Llama 4 Scout — free tier, velocissimo):
+```typescript
+ai: {
+  provider: 'groq',
+  apiKey: import.meta.env.VITE_GROQ_API_KEY,
+  // model opzionale — default: 'meta-llama/llama-4-scout-17b-16e-instruct'
+  // ⚠️ usare solo modelli vision-capable: llama-3.1-8b-instant è text-only
+}
+```
 
+**Endpoint custom** (es. Vertex AI, proxy aziendale):
 ```typescript
 ai: {
   provider: 'gemini',
-  model: 'gemini-1.5-flash',
-  apiKey: 'AIza...',
-  baseUrl: 'https://us-central1-aiplatform.googleapis.com/v1/...',  // endpoint custom
+  apiKey: import.meta.env.VITE_GEMINI_API_KEY,
+  baseUrl: 'https://us-central1-aiplatform.googleapis.com/v1/...',
 }
 ```
 
-Per Ollama con un modello locale diverso da `llava:13b`:
-
+**Ollama** (locale, nessuna chiave, privacy-preserving):
 ```typescript
 ai: {
   provider: 'ollama',
-  model: 'llava:7b',         // modello più leggero per macchine con poca VRAM
-  baseUrl: 'http://localhost:11434',  // default Ollama, sovrascrivibile
+  model: 'llava:7b',
+  baseUrl: 'http://localhost:11434',
 }
-```
 ```
 
 ### Lifecycle: idratazione ad ogni `enable()`
@@ -141,51 +148,69 @@ Alt+A (o click sul toggle)
   → SenseArtViewer.enable()
       → mapper.snapshotViewport()         ← cattura bounds viewport corrente
       → mapClient.clearCache()            ← forza ri-fetch ad ogni attivazione
-      → hydrateAILabels() [async]         ← non blocca l'attivazione del layer
-          → canvas.toDataURL('image/jpeg') ← screenshot del viewport corrente
-          → dispatch 'senseArt:ai-loading' ← UI mostra "⏳ AI analizza la vista…"
+      → showAILoadingBanner()             ← banner "⏳ AI sta analizzando…" sul viewer
+      → hydrateAILabels() [async]
+          → dispatch 'senseArt:ai-loading'  ← evento per consumer custom
+          → canvas.toDataURL('image/jpeg')  ← screenshot del viewport corrente
           → ArtworkMapClient.getMap(dataUrl, grid)
               → provider.fetchMap(dataUrl, grid)
-                  → [Gemini API call con canvas corrente come immagine]
+                  → [API call con canvas corrente come immagine]
                   → parse + validate JSON
               → cache (keyed su dataUrl + grid)
           → per ogni cella (r, c):
               A11yOverlay.updateCellLabel(r, c, metadata.label)
               GridCell.metadata = metadata
-          → dispatch 'senseArt:ai-ready'  ← UI mostra "✓ Etichette AI pronte"
-      → overlay.setInteractive(true)
-      → focusTrap.activate()
+          → dispatch 'senseArt:ai-ready'   ← evento per consumer custom
+      → hideAILoadingBanner()              ← banner rimosso dal DOM
+      → activateGrid()                     ← celle già etichettate prima dell'interazione
+          → overlay.setInteractive(true)
+          → focusTrap.activate()
+          → focusCell(0, 0)                ← prima cella già ha il label AI
 ```
 
-L'attivazione del layer è **immediata**: la griglia ARIA è navigabile con etichette generiche mentre l'AI lavora in background (≈1–2s). Se il provider fallisce, le etichette generiche rimangono — degradazione silenziosa.
+L'attivazione del layer è **differita al completamento AI**: le celle diventano interattive solo quando i label sono pronti, così la prima cella non appare mai vuota. Se il provider fallisce (rete, quota esaurita), `hydrateAILabels()` cattura l'errore nel `catch`, il `finally` rimuove comunque il banner, e la griglia si attiva con etichette generiche di fallback — degradazione silenziosa.
+
+### Banner di caricamento built-in
+
+Quando è configurato un provider AI, `SenseArtViewer` inietta automaticamente un banner visivo sul container OSD durante l'analisi:
+
+```
+┌─────────────────────────────────────────┐
+│  ⏳ AI sta analizzando la vista…        │  ← banner semi-trasparente, aria-live="polite"
+├─────────────────────────────────────────┤
+│                                         │
+│         [OSD viewer / opera]            │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+Il banner è rimosso automaticamente quando i label sono pronti (o in caso di errore). **Nessun codice richiesto nel consumer.**
 
 ### Evento di stato AI: `senseArt:ai-loading` / `senseArt:ai-ready`
 
-`SenseArtViewer` dispatcha due eventi custom sul container OSD durante ogni idratazione:
+In aggiunta al banner built-in, `SenseArtViewer` dispatcha due eventi custom sul container OSD, utili per chi vuole una UI personalizzata:
 
 ```typescript
 // Inizio chiamata AI
 container.dispatchEvent(new CustomEvent('senseArt:ai-loading', { bubbles: true }))
 
-// Fine (successo o fallimento)
+// Fine (successo o fallimento — sempre emesso nel finally)
 container.dispatchEvent(new CustomEvent('senseArt:ai-ready', { bubbles: true }))
 ```
 
-Il consumer può ascoltarli per aggiornare la UI:
+Esempio di uso avanzato (badge custom nell'header dell'app):
 
 ```typescript
 const osdEl = document.getElementById('osd')!
 
 osdEl.addEventListener('senseArt:ai-loading', () => {
-  loadingBadge.style.display = 'inline'
+  statusBadge.textContent = '⏳ Analisi in corso…'
 })
 osdEl.addEventListener('senseArt:ai-ready', () => {
-  loadingBadge.style.display = 'none'
-  readyBadge.style.display = 'inline'
+  statusBadge.textContent = '✓ Pronto'
+  setTimeout(() => { statusBadge.textContent = '' }, 3000)
 })
 ```
-
-`senseArt:ai-ready` è sempre emesso (nel `finally`), anche in caso di errore — l'indicatore di caricamento non rimane bloccato.
 
 ---
 
@@ -331,6 +356,38 @@ Queste regole derivano da `DOC_GUIDE.md` e vanno applicate a tutti i provider:
 
 ## Sicurezza e privacy
 
-- Le chiavi API (`apiKey`) non vengono mai loggate o esposte in bundle pubblici. Passarle come variabile d'ambiente server-side per produzione.
-- `OllamaProvider` è l'unica opzione che non invia dati a server remoti — raccomandata per opere inedite o contesti con restrizioni IP.
+### Gestione delle chiavi API
+
+> **Regola fondamentale**: non inserire mai una chiave API come stringa letterale nel codice sorgente. Una chiave nel sorgente finisce nel repository git e, nei progetti Vite, anche nel bundle JS distribuito — dove chiunque può leggerla con DevTools.
+
+**Approccio corretto per app Vite (sviluppo/demo)**:
+
+1. Crea `apps/demo-osd/.env.local` (già in `.gitignore`):
+   ```
+   VITE_GROQ_API_KEY=gsk_...
+   VITE_GEMINI_API_KEY=AIza...
+   ```
+
+2. Leggi la variabile in `main.ts`:
+   ```typescript
+   ai: {
+     provider: 'groq',
+     apiKey: import.meta.env.VITE_GROQ_API_KEY,
+   }
+   ```
+
+3. Aggiungi `"types": ["vite/client"]` in `tsconfig.json` per il tipo `ImportMeta.env`.
+
+**Limiti dell'approccio Vite**: la variabile viene inlinata nel bundle al build time — è oscurata rispetto al sorgente ma tecnicamente estraibile dal bundle minificato. Per produzione con utenti anonimi usare un **backend proxy** che non espone la chiave al browser.
+
+**Matrice di sicurezza per provider**:
+
+| Provider | Chiave esposta al browser? | Raccomandato per |
+|---|---|---|
+| `'mock'` | — | CI, test, demo offline |
+| `'ollama'` | No (chiamata locale) | Produzione privacy-sensitive |
+| `'groq'` / `'gemini'` / `'openai'` | Sì (in bundle) | Dev/demo con `.env.local` |
+| Qualsiasi via proxy server | No | Produzione pubblica |
+
+- `OllamaProvider` è l'unica opzione cloud-free — raccomandata per opere inedite o contesti con restrizioni di trasmissione dati.
 - `MockProvider` non richiede nessuna chiave ed è sicuro per ambienti offline e testing CI.

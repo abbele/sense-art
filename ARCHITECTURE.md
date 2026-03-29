@@ -24,10 +24,7 @@ sense-art-monorepo/               ← pnpm workspace root (private)
 │       ├── .releaserc.json       ← semantic-release configuration
 │       └── package.json          ← name: sense-art, exports, peerDependencies
 ├── apps/
-│   ├── demo-osd/                 ← Vite app: raw OSD + SenseArt (port 5173)
-│   │   ├── src/main.ts
-│   │   └── index.html
-│   └── demo-storiiies/           ← Vite app: Storiiies-style tour + SenseArt (port 5174)
+│   └── demo-osd/                 ← Vite app: raw OSD + SenseArt (port 5173)
 │       ├── src/main.ts
 │       └── index.html
 ├── .github/
@@ -275,22 +272,25 @@ User presses ArrowRight
                   → screen reader announces
 ```
 
-### Alt+A (enable) — AI label hydration in background
+### Alt+A (enable) — AI label hydration, grid activation deferred
 
 ```
 SenseArtViewer.enable()
   → mapper.snapshotViewport()
   → mapClient.clearCache()
-  → hydrateAILabels() [async, non-blocking]
+  → showAILoadingBanner()                       ← banner built-in sul container OSD
+  → hydrateAILabels() [async]
+      → container.dispatchEvent('senseArt:ai-loading')  ← evento per consumer custom
       → canvas.toDataURL('image/jpeg')          ← current viewport screenshot
-      → container.dispatchEvent('senseArt:ai-loading')  ← UI shows spinner
       → ArtworkMapClient.getMap(dataUrl, grid)
-          → provider.fetchMap(dataUrl, grid)    ← Gemini API or fixture
+          → provider.fetchMap(dataUrl, grid)    ← AI API o fixture
       → for each (r, c): A11yOverlay.updateCellLabel + GridCell.metadata
-      → container.dispatchEvent('senseArt:ai-ready')   ← UI hides spinner
-  → overlay.setInteractive(true)
-  → focusTrap.activate()
-  → focusTrap.focusCell(0, 0, silent)
+      → container.dispatchEvent('senseArt:ai-ready')    ← evento per consumer custom
+  → hideAILoadingBanner()
+  → activateGrid()
+      → overlay.setInteractive(true)
+      → focusTrap.activate()
+      → focusTrap.focusCell(0, 0, silent)       ← prima cella già etichettata
 ```
 
 ### Enter / Space — zoom into focused cell
@@ -347,16 +347,10 @@ Push to main
 | `docs:` `chore:` `refactor:` | no release | — |
 
 **Scopes** (enforced by commitlint):
-`sense-art` · `demo-osd` · `demo-storiiies` · `ci` · `docs` · `deps` · `release`
+`sense-art` · `demo-osd` · `ci` · `docs` · `deps` · `release`
 
 ---
 
-## Apps: demo-osd vs demo-storiiies
+## App: demo-osd (port 5173)
 
-### `apps/demo-osd` (port 5173)
-
-Minimal integration: raw OSD viewer with SenseArt mounted on `open`. Tests the accessibility layer in isolation. Used for VoiceOver/NVDA manual testing.
-
-### `apps/demo-storiiies` (port 5174)
-
-Simulates a Storiiies-style **linear curator tour** (5 pre-defined annotation steps), then demonstrates SenseArt restoring **agency**: pressing `Alt+A` at any point exits the linear tour and activates free grid navigation. This is the direct demonstration of the project's thesis — the coexistence of guided experience and autonomous exploration.
+Minimal integration: raw OSD viewer with SenseArt mounted on `open`. Tests the accessibility layer in isolation — AI providers, sonification, and keyboard navigation. Used for VoiceOver/NVDA manual testing.

@@ -11,6 +11,7 @@ export { FocusTrap } from './core/FocusTrap.js'
 export { ArtworkMapClient } from './ai/ArtworkMapClient.js'
 export { MockProvider } from './ai/MockProvider.js'
 export { GeminiProvider } from './ai/GeminiProvider.js'
+export { GroqProvider } from './ai/GroqProvider.js'
 
 // All TypeScript types
 export type {
