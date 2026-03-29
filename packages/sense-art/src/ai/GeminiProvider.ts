@@ -1,13 +1,13 @@
 import type { ArtworkMap, ArtworkMapProvider, GridConfig } from '../types/index.js'
 
-const DEFAULT_MODEL = 'gemini-1.5-flash'
+const DEFAULT_MODEL = 'gemini-2.0-flash'
 const DEFAULT_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta'
 
 /**
  * AI provider that uses Google Gemini (multimodal) to generate semantic
  * cell-level descriptions for artwork images.
  *
- * Free tier: 15 RPM / 1M tokens per day — no billing required.
+ * Default model: `gemini-2.0-flash`. Free tier: 15 RPM / 1M tokens per day.
  * Get an API key at https://aistudio.google.com/app/apikey
  *
  * @accessibility

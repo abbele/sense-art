@@ -41,7 +41,7 @@ export interface ArtworkMapOptions {
   apiKey?: string
   /**
    * Model identifier. Defaults per provider:
-   * - gemini: `'gemini-1.5-flash'`
+   * - gemini: `'gemini-2.0-flash'`
    * - openai: `'gpt-4o'`
    * - huggingface: `'llava-hf/llava-1.5-7b-hf'`
    * - ollama: `'llava:13b'`
