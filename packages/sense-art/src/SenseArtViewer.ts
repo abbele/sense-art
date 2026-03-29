@@ -134,6 +134,7 @@ export class SenseArtViewer {
     // start() must be called within a user gesture handler (Web Audio requirement).
     // enable() is called from the keyboard shortcut handler, satisfying this constraint.
     void this.sonifier?.start()
+    this.mapper!.snapshotViewport()
     this.overlay!.setInteractive(true)
     this.focusTrap!.activate()
     // Focus cell (0,0) so the user sees the grid immediately and keyboard events
@@ -247,7 +248,7 @@ export class SenseArtViewer {
     }
   }
 
-  private onCellFocused(row: number, col: number): void {
+  private onCellFocused(row: number, col: number, activate = false): void {
     if (!this.mapper || !this.liveEngine || !this.overlay) return
     if (this.activating) return
 
@@ -258,7 +259,8 @@ export class SenseArtViewer {
       return
     }
 
-    this.mapper.focusToBounds(row, col)
+    // Zoom only on explicit activation (Enter/Space), not on arrow/Tab navigation.
+    if (activate) this.mapper.focusToBounds(row, col)
     this.overlay.setCurrentCell(row, col)
     this.overlay.setRovingFocus(row, col)
 

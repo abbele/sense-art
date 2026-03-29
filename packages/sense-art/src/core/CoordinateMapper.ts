@@ -10,16 +10,26 @@ const REGION_LABELS: string[][] = [
 /**
  * Translates between grid cell positions and OpenSeadragon viewport bounds.
  *
- * The image is divided into an N×M grid in normalized image coordinates (0.0–1.0).
+ * The grid subdivides the viewport that was visible at the time of snapshotViewport().
  * This class is the single source of truth for spatial mapping.
  */
 export class CoordinateMapper {
   private readonly viewer: OSDViewer
   private readonly grid: GridConfig
+  private snapshotBounds: OpenSeadragon.Rect | null = null
 
   constructor(viewer: OSDViewer, grid: GridConfig) {
     this.viewer = viewer
     this.grid = grid
+  }
+
+  /**
+   * Captures the current viewport bounds as the reference for cell navigation.
+   * Call this when the accessibility layer is enabled so cells map to what
+   * the user is currently looking at, not the full image.
+   */
+  snapshotViewport(): void {
+    this.snapshotBounds = this.viewer.viewport.getBounds(true)
   }
 
   /**
@@ -53,19 +63,18 @@ export class CoordinateMapper {
    * (AriaLiveEngine) use to announce the new zoom level and region.
    */
   focusToBounds(row: number, col: number): void {
-    const norm = this.cellToBounds(row, col) // normalized [0,1] image coords
-    // imageToViewportRectangle expects image pixel coordinates, not normalized.
-    // Multiply by actual image dimensions to convert.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const size: OpenSeadragon.Point = (this.viewer as any).world.getItemAt(0).getContentSize()
-    const pixelBounds = new OpenSeadragon.Rect(
-      norm.x * size.x,
-      norm.y * size.y,
-      norm.width * size.x,
-      norm.height * size.y,
+    // Use the viewport snapshot taken at enable() time so cells subdivide
+    // whatever the user was looking at, not the full image.
+    const base = this.snapshotBounds ?? this.viewer.viewport.getBounds(true)
+    const cellW = base.width / this.grid.columns
+    const cellH = base.height / this.grid.rows
+    const cellBounds = new OpenSeadragon.Rect(
+      base.x + col * cellW,
+      base.y + row * cellH,
+      cellW,
+      cellH,
     )
-    const viewportBounds = this.viewer.viewport.imageToViewportRectangle(pixelBounds)
-    this.viewer.viewport.fitBounds(viewportBounds, false)
+    this.viewer.viewport.fitBounds(cellBounds, false)
   }
 
   /**

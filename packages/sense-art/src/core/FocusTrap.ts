@@ -1,6 +1,6 @@
 import type { GridCell, GridConfig } from '../types/index.js'
 
-type CellFocusCallback = (row: number, col: number) => void
+type CellFocusCallback = (row: number, col: number, activate?: boolean) => void
 
 /**
  * Manages keyboard navigation within the ARIA grid.
@@ -114,10 +114,8 @@ export class FocusTrap {
       case 'Enter':
       case ' ':
         e.preventDefault()
-        // Re-fire callbacks on the current cell to trigger focusToBounds explicitly.
-        // Semantics: "zoom into this cell" as a deliberate user action (distinct from
-        // the passive zoom that happens on arrow-key navigation).
-        this.focusCallbacks.forEach((cb) => cb(this.currentRow, this.currentCol))
+        // activate=true: explicit zoom into the cell (deliberate user action).
+        this.focusCallbacks.forEach((cb) => cb(this.currentRow, this.currentCol, true))
         break
       case 'Escape':
         e.preventDefault()
