@@ -10,6 +10,7 @@ export { FocusTrap } from './core/FocusTrap.js'
 // AI layer (Phase 3)
 export { ArtworkMapClient } from './ai/ArtworkMapClient.js'
 export { MockProvider } from './ai/MockProvider.js'
+export { GeminiProvider } from './ai/GeminiProvider.js'
 
 // All TypeScript types
 export type {

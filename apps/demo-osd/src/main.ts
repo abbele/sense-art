@@ -37,6 +37,9 @@ const viewer = OpenSeadragon({
 const senseArt = new SenseArtViewer(viewer, {
   grid: { rows: 3, columns: 3 },
   sonification: { enabled: true },
+  // AI label hydration: uses mock fixture by default (no API key needed).
+  // To use Gemini: set provider: 'gemini', apiKey: 'AIza...'
+  ai: { provider: 'mock' },
 })
 
 // Mount on OSD ready (canvas must exist before overlay is injected)

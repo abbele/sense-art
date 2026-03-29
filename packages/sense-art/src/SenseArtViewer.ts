@@ -5,6 +5,9 @@ import { CoordinateMapper } from './core/CoordinateMapper.js'
 import { FocusTrap } from './core/FocusTrap.js'
 import { Sonifier } from './audio/Sonifier.js'
 import { PixelSampler } from './audio/PixelSampler.js'
+import { ArtworkMapClient } from './ai/ArtworkMapClient.js'
+import { MockProvider } from './ai/MockProvider.js'
+import { GeminiProvider } from './ai/GeminiProvider.js'
 
 const DEFAULT_GRID: GridConfig = { rows: 3, columns: 3 }
 
@@ -50,12 +53,14 @@ export class SenseArtViewer {
   private grid: GridConfig
   private readonly parsedShortcut: ParsedShortcut
   private readonly sonifierOptions: SenseArtOptions['sonification']
+  private readonly aiOptions: SenseArtOptions['ai']
   private overlay: A11yOverlay | null = null
   private mapper: CoordinateMapper | null = null
   private focusTrap: FocusTrap | null = null
   private liveEngine: AriaLiveEngine | null = null
   private sonifier: Sonifier | null = null
   private pixelSampler: PixelSampler | null = null
+  private mapClient: ArtworkMapClient | null = null
   private resizeObserver: ResizeObserver | null = null
   private mounted = false
   private enabled = false
@@ -66,6 +71,7 @@ export class SenseArtViewer {
     this.viewer = viewer
     this.grid = { ...(options.grid ?? DEFAULT_GRID) }
     this.sonifierOptions = options.sonification
+    this.aiOptions = options.ai
     this.parsedShortcut = parseShortcut(options.activationShortcut ?? 'Alt+A')
     this.boundShortcutHandler = this.handleGlobalShortcut.bind(this)
   }
@@ -116,6 +122,11 @@ export class SenseArtViewer {
     })
 
     this.mounted = true
+
+    // Hydrate cell labels with AI-generated descriptions in the background.
+    // Non-blocking: generic labels are already rendered; AI labels overwrite them
+    // once the provider responds. Failures degrade silently to generic labels.
+    void this.hydrateAILabels()
   }
 
   /**
@@ -230,6 +241,47 @@ export class SenseArtViewer {
       this.focusTrap.activate()
       this.focusTrap.focusCell(0, 0, true) // silent: don't zoom on rebuild
       this.enabled = true
+    }
+  }
+
+  private buildProvider() {
+    const opt = this.aiOptions
+    if (!opt) return null
+    const providerName = opt.provider ?? 'gemini'
+    switch (providerName) {
+      case 'mock':
+        return new MockProvider()
+      case 'gemini': {
+        if (!opt.apiKey) {
+          console.warn('SenseArt: GeminiProvider requires options.ai.apiKey')
+          return null
+        }
+        return new GeminiProvider({ apiKey: opt.apiKey, model: opt.model, baseUrl: opt.baseUrl })
+      }
+      default:
+        console.warn(`SenseArt: unknown AI provider '${providerName as string}'`)
+        return null
+    }
+  }
+
+  private async hydrateAILabels(): Promise<void> {
+    if (!this.aiOptions?.imageUrl && this.aiOptions?.provider !== 'mock') return
+    const provider = this.buildProvider()
+    if (!provider) return
+    this.mapClient = new ArtworkMapClient(provider)
+    try {
+      const imageUrl = this.aiOptions?.imageUrl ?? ''
+      const map = await this.mapClient.getMap(imageUrl, this.grid)
+      for (let r = 0; r < this.grid.rows; r++) {
+        for (let c = 0; c < this.grid.columns; c++) {
+          const meta = map.cells[r]?.[c]
+          if (!meta || !this.overlay) continue
+          this.overlay.updateCellLabel(r, c, meta.label)
+          this.overlay.getCell(r, c).metadata = meta
+        }
+      }
+    } catch (err) {
+      console.warn('SenseArt: AI label hydration failed', err)
     }
   }
 

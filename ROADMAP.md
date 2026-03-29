@@ -135,11 +135,15 @@
 | `OllamaProvider` | `llava:13b` | Free | Yes | Planned |
 | `GeminiProvider` | `gemini-1.5-flash` | Free tier | No | Planned |
 
-- [ ] Evaluate label quality on a test artwork before picking a primary provider
+- [x] Wire `ArtworkMapClient` into `SenseArtViewer.mount()` — non-blocking hydration, degrades gracefully
+- [x] Fix `MockProvider` to load from `artwork-map.json` fixture (3×3); generic fallback for other sizes
+- [x] Implement `GeminiProvider` — Gemini 1.5 Flash, free tier, configurable model/baseUrl
+- [x] Add `apiKey`, `model`, `baseUrl` to `ArtworkMapOptions` — all providers fully configurable
+- [x] Write `AI_INTEGRATION.md` — motivation, architecture, UX walkthrough, provider guide
 - [ ] Implement `OpenAIProvider`
 - [ ] Implement `HuggingFaceProvider`
 - [ ] Implement `OllamaProvider`
-- [ ] Wire `ArtworkMapClient` into `SenseArtViewer.mount()` — hydrate cell labels after image loads
+- [ ] Evaluate label quality on a live artwork with `GeminiProvider` (manual test in `demo-osd`)
 - [ ] Document provider selection guide in `DOC_GUIDE.md`
 
 ---

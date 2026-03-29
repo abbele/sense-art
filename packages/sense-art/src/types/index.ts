@@ -32,7 +32,27 @@ export interface SonifierOptions {
 export interface ArtworkMapOptions {
   /** URL of the artwork image to send to the AI provider */
   imageUrl?: string
-  provider?: 'mock' | 'openai' | 'huggingface' | 'ollama'
+  /**
+   * AI provider to use. Default: `'gemini'`.
+   * Use `'mock'` for development/testing (no API key required).
+   */
+  provider?: 'mock' | 'gemini' | 'openai' | 'huggingface' | 'ollama'
+  /** API key for the selected provider. Not required for `'mock'` or `'ollama'`. */
+  apiKey?: string
+  /**
+   * Model identifier. Defaults per provider:
+   * - gemini: `'gemini-1.5-flash'`
+   * - openai: `'gpt-4o'`
+   * - huggingface: `'llava-hf/llava-1.5-7b-hf'`
+   * - ollama: `'llava:13b'`
+   */
+  model?: string
+  /**
+   * Custom API base URL. Useful for self-hosted endpoints (Ollama, Vertex AI, etc.).
+   * Defaults per provider:
+   * - ollama: `'http://localhost:11434'`
+   */
+  baseUrl?: string
 }
 
 // ─── AI / Mental Map ─────────────────────────────────────────────────────────
