@@ -10,6 +10,12 @@ const IIIF_MANIFEST = 'https://iiif.micr.io/PJEZO/info.json'
 const viewer = OpenSeadragon({
   id: 'osd',
   tileSources: IIIF_MANIFEST,
+  // OSD looks for toolbar SVGs at images/ — in Vite there is no such path; use CDN.
+  prefixUrl: 'https://openseadragon.github.io/openseadragon/images/',
+  // Request tiles with CORS headers so the canvas is not tainted.
+  // Required for PixelSampler.sample() to call getImageData() without a SecurityError.
+  // iiif.micr.io responds with Access-Control-Allow-Origin: * for public images.
+  crossOriginPolicy: 'Anonymous',
   // Force 2D canvas renderer: WebGL fails on gigapixel textures and, crucially,
   // PixelSampler.sample() requires getImageData() which is only available on a
   // 2D canvas context (not on a WebGL context).
@@ -36,6 +42,15 @@ const senseArt = new SenseArtViewer(viewer, {
 // Mount on OSD ready (canvas must exist before overlay is injected)
 viewer.addOnceHandler('open', () => {
   senseArt.mount()
+})
+
+// Test button — activate/deactivate without using the keyboard shortcut
+const toggleBtn = document.getElementById('toggle-btn') as HTMLButtonElement
+viewer.addOnceHandler('open', () => {
+  toggleBtn.addEventListener('click', () => {
+    senseArt.toggle()
+    toggleBtn.textContent = toggleBtn.textContent === 'Attiva layer' ? 'Disattiva layer' : 'Attiva layer'
+  })
 })
 
 // Expose to browser console for manual testing

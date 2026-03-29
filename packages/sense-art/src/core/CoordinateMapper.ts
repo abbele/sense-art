@@ -53,8 +53,18 @@ export class CoordinateMapper {
    * (AriaLiveEngine) use to announce the new zoom level and region.
    */
   focusToBounds(row: number, col: number): void {
-    const bounds = this.cellToBounds(row, col)
-    const viewportBounds = this.viewer.viewport.imageToViewportRectangle(bounds)
+    const norm = this.cellToBounds(row, col) // normalized [0,1] image coords
+    // imageToViewportRectangle expects image pixel coordinates, not normalized.
+    // Multiply by actual image dimensions to convert.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const size: OpenSeadragon.Point = (this.viewer as any).world.getItemAt(0).getContentSize()
+    const pixelBounds = new OpenSeadragon.Rect(
+      norm.x * size.x,
+      norm.y * size.y,
+      norm.width * size.x,
+      norm.height * size.y,
+    )
+    const viewportBounds = this.viewer.viewport.imageToViewportRectangle(pixelBounds)
     this.viewer.viewport.fitBounds(viewportBounds, false)
   }
 

@@ -59,6 +59,7 @@ export class SenseArtViewer {
   private resizeObserver: ResizeObserver | null = null
   private mounted = false
   private enabled = false
+  private activating = false
   private boundShortcutHandler: (e: KeyboardEvent) => void
 
   constructor(viewer: OSDViewer, options: SenseArtOptions = {}) {
@@ -104,6 +105,16 @@ export class SenseArtViewer {
     this.resizeObserver.observe(container)
 
     document.addEventListener('keydown', this.boundShortcutHandler)
+
+    // Block OSD from processing keyboard shortcuts (arrow keys, etc.) while the
+    // ARIA layer is active. Setting preventDefaultAction stops OSD's internal
+    // handler (panBy / zoomBy) without stopping DOM event propagation, so
+    // FocusTrap's keydown listener on the container still fires normally.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ;(this.viewer as any).addHandler('canvas-key-down', (e: Record<string, unknown>) => {
+      if (this.enabled) e['preventDefaultAction'] = true
+    })
+
     this.mounted = true
   }
 
@@ -123,7 +134,13 @@ export class SenseArtViewer {
     // start() must be called within a user gesture handler (Web Audio requirement).
     // enable() is called from the keyboard shortcut handler, satisfying this constraint.
     void this.sonifier?.start()
+    this.overlay!.setInteractive(true)
     this.focusTrap!.activate()
+    // Focus cell (0,0) so the user sees the grid immediately and keyboard events
+    // reach FocusTrap. The activating flag prevents onCellFocused from zooming.
+    this.activating = true
+    this.focusTrap!.focusCell(0, 0, true)
+    this.activating = false
     this.liveEngine!.announce(
       "Layer accessibilità attivato. Usa le frecce per navigare l'opera.",
     )
@@ -139,6 +156,7 @@ export class SenseArtViewer {
    */
   disable(): void {
     if (!this.enabled) return
+    this.overlay!.setInteractive(false)
     this.focusTrap!.deactivate()
     this.liveEngine!.announce('Layer accessibilità disattivato.')
     this.enabled = false
@@ -207,7 +225,9 @@ export class SenseArtViewer {
     this.pixelSampler = null // will re-init lazily on next cell focus
 
     if (wasEnabled) {
+      this.overlay.setInteractive(true)
       this.focusTrap.activate()
+      this.focusTrap.focusCell(0, 0, true) // silent: don't zoom on rebuild
       this.enabled = true
     }
   }
@@ -229,6 +249,7 @@ export class SenseArtViewer {
 
   private onCellFocused(row: number, col: number): void {
     if (!this.mapper || !this.liveEngine || !this.overlay) return
+    if (this.activating) return
 
     // Sentinel from FocusTrap Escape: reset zoom
     if (row === -1 && col === -1) {
@@ -263,8 +284,13 @@ export class SenseArtViewer {
 
   private handleGlobalShortcut(e: KeyboardEvent): void {
     const s = this.parsedShortcut
+    // e.key on macOS with Option held produces the composed character (e.g. 'å' for ⌥A).
+    // e.code is layout-independent ('KeyA') and works correctly on all platforms.
+    const keyMatch =
+      e.key.toLowerCase() === s.key ||
+      e.code.toLowerCase() === `key${s.key}`
     if (
-      e.key.toLowerCase() === s.key &&
+      keyMatch &&
       e.altKey === s.altKey &&
       e.ctrlKey === s.ctrlKey &&
       e.shiftKey === s.shiftKey &&

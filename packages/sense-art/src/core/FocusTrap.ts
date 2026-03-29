@@ -38,13 +38,15 @@ export class FocusTrap {
    */
   activate(): void {
     if (this.active) return
-    this.container.addEventListener('keydown', this.boundHandler)
+    // Use capture=true so FocusTrap sees keydown events before OSD's canvas handler,
+    // which may call stopPropagation and prevent bubbling to the container.
+    this.container.addEventListener('keydown', this.boundHandler, true)
     this.active = true
   }
 
   /** Deactivates keyboard interception. */
   deactivate(): void {
-    this.container.removeEventListener('keydown', this.boundHandler)
+    this.container.removeEventListener('keydown', this.boundHandler, true)
     this.active = false
   }
 
@@ -59,13 +61,21 @@ export class FocusTrap {
    * - Fires all registered `onCellFocus` callbacks.
    * - Screen reader announces the button's `aria-label` automatically on focus.
    */
-  focusCell(row: number, col: number): void {
+  /**
+   * @param silent - If true, updates internal state and DOM focus without
+   *   firing onCellFocus callbacks. Use when restoring focus for keyboard
+   *   accessibility without triggering a viewport zoom (e.g. on enable() or
+   *   after Escape resets the viewport via goHome()).
+   */
+  focusCell(row: number, col: number, silent = false): void {
     const cell = this.cells[row]?.[col]
     if (!cell) return
     this.currentRow = row
     this.currentCol = col
-    cell.element.focus()
-    this.focusCallbacks.forEach((cb) => cb(row, col))
+    cell.element.focus({ preventScroll: true })
+    if (!silent) {
+      this.focusCallbacks.forEach((cb) => cb(row, col))
+    }
   }
 
   /**
@@ -112,7 +122,7 @@ export class FocusTrap {
       case 'Escape':
         e.preventDefault()
         this.focusCallbacks.forEach((cb) => cb(-1, -1)) // sentinel: reset signal
-        this.focusCell(0, 0)
+        this.focusCell(0, 0, true) // silent: viewport already reset via goHome()
         break
     }
   }

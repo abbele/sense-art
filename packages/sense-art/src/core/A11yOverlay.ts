@@ -74,7 +74,7 @@ export class A11yOverlay {
         btn.setAttribute('tabindex', r === 0 && c === 0 ? '0' : '-1')
         btn.className = 'sa-gridcell'
         Object.assign(btn.style, {
-          pointerEvents: 'auto',
+          pointerEvents: 'none',   // activated via setInteractive(true) on enable()
           background: 'transparent',
           border: 'none',
           cursor: 'default',
@@ -147,6 +147,22 @@ export class A11yOverlay {
       for (const cell of rowCells) {
         const isActive = cell.position.row === row && cell.position.col === col
         cell.element.setAttribute('tabindex', isActive ? '0' : '-1')
+      }
+    }
+  }
+
+  /**
+   * Enables or disables pointer-event interception on all cells.
+   *
+   * @accessibility
+   * When SenseArt is disabled, cells must be non-interactive so that OSD
+   * receives all mouse/touch events normally. When enabled, cells are restored
+   * to `pointer-events: auto` so keyboard focus is possible.
+   */
+  setInteractive(enabled: boolean): void {
+    for (const rowCells of this.cells) {
+      for (const cell of rowCells) {
+        cell.element.style.pointerEvents = enabled ? 'auto' : 'none'
       }
     }
   }

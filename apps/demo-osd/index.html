@@ -7,11 +7,14 @@
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+      html, body { height: 100%; }
+
       body {
         font-family: system-ui, sans-serif;
         background: #111;
         color: #eee;
-        min-height: 100dvh;
+        height: 100dvh;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
       }
@@ -36,6 +39,8 @@
       #viewer-container {
         flex: 1;
         position: relative;
+        min-height: 0;
+        overflow: hidden;
       }
 
       #osd {
@@ -61,6 +66,8 @@
     <div class="hint" role="note" aria-label="Istruzioni tastiera">
       <strong>Tastiera:</strong>
       <kbd>Alt+A</kbd> attiva/disattiva · <kbd>↑↓←→</kbd> naviga la griglia · <kbd>Esc</kbd> reset zoom · <kbd>Tab</kbd> ciclo celle
+      &nbsp;·&nbsp;
+      <button id="toggle-btn" style="font-size:0.82rem;padding:2px 10px;cursor:pointer;">Attiva layer</button>
     </div>
 
     <main id="viewer-container">

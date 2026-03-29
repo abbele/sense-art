@@ -35,7 +35,14 @@ export class PixelSampler {
     const pw = Math.max(1, Math.round(w * this.canvas.width))
     const ph = Math.max(1, Math.round(h * this.canvas.height))
 
-    const imageData = ctx.getImageData(px, py, pw, ph)
+    let imageData: ImageData
+    try {
+      imageData = ctx.getImageData(px, py, pw, ph)
+    } catch {
+      // Canvas tainted by cross-origin tiles (SecurityError). Return silent fallback
+      // so sonification degrades gracefully rather than throwing an unhandled rejection.
+      return this.emptyPixel()
+    }
     return this.average(imageData.data)
   }
 
