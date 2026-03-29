@@ -295,7 +295,9 @@ export class SenseArtViewer {
     if (!this.mapper || !this.overlay) return
     for (let r = 0; r < this.grid.rows; r++) {
       for (let c = 0; c < this.grid.columns; c++) {
-        this.overlay.updateCellLabel(r, c, this.cellLabel(r, c))
+        const aiLabel = this.overlay.getCell(r, c).metadata?.label
+        const base = aiLabel ?? `Regione ${this.mapper.currentRegionLabel(r, c)}`
+        this.overlay.updateCellLabel(r, c, `${base}. Zoom ${this.mapper.currentZoomLabel()}`)
       }
     }
   }
@@ -316,9 +318,11 @@ export class SenseArtViewer {
     this.overlay.setCurrentCell(row, col)
     this.overlay.setRovingFocus(row, col)
 
-    const label = this.mapper.currentRegionLabel(row, col)
+    // Prefer AI-generated label if available; fall back to generic region label.
+    const aiLabel = this.overlay.getCell(row, col).metadata?.label
+    const label = aiLabel ?? `Regione ${this.mapper.currentRegionLabel(row, col)}`
     const zoom = this.mapper.currentZoomLabel()
-    this.overlay.updateCellLabel(row, col, `Regione ${label}. Zoom ${zoom}`)
+    this.overlay.updateCellLabel(row, col, `${label}. Zoom ${zoom}`)
     this.liveEngine.announceCell(row, col, label)
 
     void this.sonifyCell(row, col)
