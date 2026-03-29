@@ -122,11 +122,6 @@ export class SenseArtViewer {
     })
 
     this.mounted = true
-
-    // Hydrate cell labels with AI-generated descriptions in the background.
-    // Non-blocking: generic labels are already rendered; AI labels overwrite them
-    // once the provider responds. Failures degrade silently to generic labels.
-    void this.hydrateAILabels()
   }
 
   /**
@@ -146,6 +141,10 @@ export class SenseArtViewer {
     // enable() is called from the keyboard shortcut handler, satisfying this constraint.
     void this.sonifier?.start()
     this.mapper!.snapshotViewport()
+    // Re-hydrate AI labels on every enable() so descriptions match the current
+    // viewport. The canvas toDataURL captures exactly what the user sees now.
+    this.mapClient?.clearCache()
+    void this.hydrateAILabels()
     this.overlay!.setInteractive(true)
     this.focusTrap!.activate()
     // Focus cell (0,0) so the user sees the grid immediately and keyboard events
@@ -265,12 +264,15 @@ export class SenseArtViewer {
   }
 
   private async hydrateAILabels(): Promise<void> {
-    if (!this.aiOptions?.imageUrl && this.aiOptions?.provider !== 'mock') return
+    if (!this.aiOptions) return
     const provider = this.buildProvider()
     if (!provider) return
-    this.mapClient = new ArtworkMapClient(provider)
+    if (!this.mapClient) this.mapClient = new ArtworkMapClient(provider)
     try {
-      const imageUrl = this.aiOptions?.imageUrl ?? ''
+      // Use the current OSD canvas as image source so Gemini sees exactly the
+      // viewport the user has open (works after zooming in too).
+      const canvas = (this.viewer.element as HTMLElement).querySelector<HTMLCanvasElement>('canvas')
+      const imageUrl = canvas?.toDataURL('image/jpeg', 0.85) ?? this.aiOptions.imageUrl ?? ''
       const map = await this.mapClient.getMap(imageUrl, this.grid)
       for (let r = 0; r < this.grid.rows; r++) {
         for (let c = 0; c < this.grid.columns; c++) {

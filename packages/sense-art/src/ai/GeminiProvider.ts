@@ -98,6 +98,12 @@ Rispondi ESCLUSIVAMENTE con JSON valido, nessun testo aggiuntivo:
   }
 
   private async fetchImageAsBase64(imageUrl: string): Promise<string> {
+    // data: URLs from canvas.toDataURL() — extract base64 directly, no fetch needed.
+    if (imageUrl.startsWith('data:')) {
+      const base64 = imageUrl.split(',')[1]
+      if (!base64) throw new Error('GeminiProvider: invalid data URL')
+      return base64
+    }
     const response = await fetch(imageUrl)
     if (!response.ok) {
       throw new Error(`GeminiProvider: failed to fetch image (HTTP ${response.status})`)
