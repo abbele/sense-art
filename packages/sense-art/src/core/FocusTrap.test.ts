@@ -154,36 +154,37 @@ describe('FocusTrap', () => {
 
   // ─── Enter / Space ────────────────────────────────────────────────────────
 
-  it('Enter fires callback on the current cell (zoom intent)', () => {
+  it('Enter fires callback with activate=true (zoom intent)', () => {
     const cb = vi.fn()
     trap.onCellFocus(cb)
     trap.activate()
     trap.focusCell(1, 2)
     cb.mockClear()
     fire(container, 'Enter')
-    expect(cb).toHaveBeenCalledWith(1, 2)
+    expect(cb).toHaveBeenCalledWith(1, 2, true)
   })
 
-  it('Space fires callback on the current cell (zoom intent)', () => {
+  it('Space fires callback with activate=true (zoom intent)', () => {
     const cb = vi.fn()
     trap.onCellFocus(cb)
     trap.activate()
     trap.focusCell(0, 1)
     cb.mockClear()
     fire(container, ' ')
-    expect(cb).toHaveBeenCalledWith(0, 1)
+    expect(cb).toHaveBeenCalledWith(0, 1, true)
   })
 
   // ─── Escape ───────────────────────────────────────────────────────────────
 
-  it('Escape fires sentinel (-1, -1) then focuses (0,0)', () => {
+  it('Escape fires sentinel (-1, -1) and silently restores focus to (0,0)', () => {
     const calls: [number, number][] = []
     trap.onCellFocus((r, c) => calls.push([r, c]))
     trap.activate()
     trap.focusCell(2, 2)
     calls.length = 0
     fire(container, 'Escape')
-    expect(calls[0]).toEqual([-1, -1])  // sentinel first
-    expect(calls[1]).toEqual([0, 0])    // then home cell
+    // Only the sentinel fires — home focus is silent (no viewport pan on restore)
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toEqual([-1, -1])
   })
 })

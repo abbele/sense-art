@@ -27,6 +27,7 @@ function makeViewer(): OSDViewer {
       getCenter: vi.fn(() => ({ x: 0.5, y: 0.5 })),
       viewportToImageCoordinates: vi.fn((p) => p),
       goHome: vi.fn(),
+      getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1, height: 1 })),
     },
   } as unknown as OSDViewer
 }
@@ -110,10 +111,10 @@ describe('CoordinateMapper', () => {
   // ─── focusToBounds ───────────────────────────────────────────────────────────
 
   describe('focusToBounds', () => {
-    it('converts to viewport coordinates and calls fitBounds', () => {
+    it('uses viewport snapshot bounds and calls fitBounds', () => {
       const mapper = new CoordinateMapper(viewer, { rows: 3, columns: 3 })
       mapper.focusToBounds(1, 1)
-      expect(viewer.viewport.imageToViewportRectangle).toHaveBeenCalled()
+      // focusToBounds subdivides the viewport snapshot — no imageToViewportRectangle needed
       expect(viewer.viewport.fitBounds).toHaveBeenCalled()
     })
 

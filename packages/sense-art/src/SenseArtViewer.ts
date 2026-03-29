@@ -102,7 +102,7 @@ export class SenseArtViewer {
 
     const cells = this.overlay.getAllCells()
     this.focusTrap = new FocusTrap(container, cells, this.grid)
-    this.focusTrap.onCellFocus((row, col) => this.onCellFocused(row, col))
+    this.focusTrap.onCellFocus((row, col, activate) => this.onCellFocused(row, col, activate))
 
     if (this.sonifierOptions?.enabled) {
       this.sonifier = new Sonifier(this.sonifierOptions)
@@ -243,7 +243,7 @@ export class SenseArtViewer {
 
     const cells = this.overlay.getAllCells()
     this.focusTrap = new FocusTrap(container, cells, this.grid)
-    this.focusTrap.onCellFocus((row, col) => this.onCellFocused(row, col))
+    this.focusTrap.onCellFocus((row, col, activate) => this.onCellFocused(row, col, activate))
     this.pixelSampler = null // will re-init lazily on next cell focus
 
     if (wasEnabled) {

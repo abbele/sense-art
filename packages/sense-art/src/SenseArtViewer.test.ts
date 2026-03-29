@@ -21,6 +21,7 @@ vi.mock('openseadragon', () => {
 function makeViewer(container: HTMLElement): OSDViewer {
   return {
     element: container,
+    addHandler: vi.fn(),
     viewport: {
       imageToViewportRectangle: vi.fn((r) => r),
       fitBounds: vi.fn(),
@@ -28,6 +29,7 @@ function makeViewer(container: HTMLElement): OSDViewer {
       getCenter: vi.fn(() => ({ x: 0.5, y: 0.5 })),
       viewportToImageCoordinates: vi.fn((p) => p),
       goHome: vi.fn(),
+      getBounds: vi.fn(() => ({ x: 0, y: 0, width: 1, height: 1 })),
     },
   } as unknown as OSDViewer
 }
@@ -93,14 +95,14 @@ describe('SenseArtViewer', () => {
       expect(container.querySelector('[role="grid"]')).not.toBeNull()
     })
 
-    it('enable() then ArrowRight calls fitBounds (end-to-end cell navigation)', () => {
+    it('enable() then Enter zooms into the focused cell (end-to-end)', () => {
       senseArt.mount()
       senseArt.enable()
       container
         .querySelector<HTMLElement>('[role="gridcell"]')!
         .focus()
       container.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
       )
       expect(viewer.viewport.fitBounds).toHaveBeenCalled()
     })
@@ -127,7 +129,7 @@ describe('SenseArtViewer', () => {
         .querySelector<HTMLElement>('[role="gridcell"]')!
         .focus()
       container.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }),
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
       )
       expect(viewer.viewport.fitBounds).toHaveBeenCalled()
     })
@@ -166,12 +168,12 @@ describe('SenseArtViewer', () => {
       document.dispatchEvent(
         new KeyboardEvent('keydown', { key: 'a', altKey: true, bubbles: true }),
       )
-      // Should now be enabled → ArrowRight triggers navigation
+      // Should now be enabled → Enter zooms into focused cell
       container
         .querySelector<HTMLElement>('[role="gridcell"]')!
         .focus()
       container.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
       )
       expect(viewer.viewport.fitBounds).toHaveBeenCalled()
     })
@@ -210,7 +212,7 @@ describe('SenseArtViewer', () => {
         .querySelector<HTMLElement>('[role="gridcell"]')!
         .focus()
       container.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
       )
       expect(fitBounds).toHaveBeenCalled()
 
@@ -267,13 +269,13 @@ describe('SenseArtViewer', () => {
       senseArt.mount()
       senseArt.enable()
       senseArt.setGrid({ rows: 4, columns: 4 })
-      // Layer should still be enabled → ArrowRight triggers navigation
+      // Layer should still be enabled → Enter zooms into focused cell
       container
         .querySelector<HTMLElement>('[role="gridcell"]')!
         .focus()
       vi.mocked(viewer.viewport.fitBounds).mockClear()
       container.dispatchEvent(
-        new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }),
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }),
       )
       expect(viewer.viewport.fitBounds).toHaveBeenCalled()
     })
