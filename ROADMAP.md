@@ -91,7 +91,8 @@
 - [x] `Tab` / `Shift+Tab` linear cycle
 - [x] `Escape` — `viewport.goHome()`, announces "Zoom reimpostato", focuses cell (0,0)
 - [x] `aria-current="true"` updated on every cell focus
-- [x] `Enter` / `Space` — re-fires `focusToBounds` on the current cell (explicit zoom intent)
+- [x] `Enter` / `Space` — zooms into focused cell relative to viewport snapshot at activation time
+- [x] Navigation (Arrow/Tab) moves highlight only — viewport does not change
 - [x] Write integration tests: full keyboard navigation end-to-end (`SenseArtViewer.test.ts`)
 
 ---
@@ -106,7 +107,7 @@
 - [x] Wire `Sonifier` into `SenseArtViewer.onCellFocused` (behind `sonification.enabled` guard)
 - [x] `Sonifier.start()` called from `SenseArtViewer.enable()` — satisfies Web Audio user-gesture requirement
 - [x] Write unit tests: luminosity→MIDI mapping, saturation→filter cutoff, audio context lifecycle
-- [ ] Verify `PixelSampler.sample()` works on the live OSD canvas element (manual test in `demo-osd`)
+- [x] Fix `PixelSampler.sample()` SecurityError — `crossOriginPolicy: 'Anonymous'` on OSD + try/catch fallback
 - [ ] Verify `Tone.Synth` + `Tone.Filter` audio mapping end-to-end in `demo-osd` (manual test)
 
 ---

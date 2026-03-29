@@ -32,7 +32,7 @@ SenseArt restores **agency** through three layered mechanisms:
 
 ### Semantic Grid Overlay
 
-A transparent `N×N` grid of ARIA `gridcell` buttons floats above the canvas. Each cell maps to a spatial region of the artwork. Arrow keys move between cells; focus triggers `fitBounds()` to pan/zoom OSD to that region. The current position is always announced via `aria-live`.
+A transparent `N×N` grid of ARIA `gridcell` buttons floats above the canvas. Each cell maps to a spatial region of the artwork. Arrow keys / Tab move the focus highlight between cells without changing the viewport. Pressing `Enter` or `Space` zooms OSD into the focused region (relative to the viewport visible at activation time). The current position is always announced via `aria-live`.
 
 ### Color Sonification
 
@@ -110,7 +110,7 @@ senseArt.mount()   // inject overlay into DOM
 senseArt.enable()  // or press Alt+A to toggle
 ```
 
-> `Alt+A` toggles the accessibility layer on/off at any time without calling `enable()` programmatically.
+> `Alt+A` toggles the accessibility layer on/off at any time. On macOS with non-US keyboards (e.g. Italian), `Option+A` produces a composed character (`å`); SenseArt uses `e.code` as fallback so the shortcut works regardless of keyboard layout.
 
 ## Keyboard Shortcuts
 
