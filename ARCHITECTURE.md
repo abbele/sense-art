@@ -100,6 +100,8 @@ class SenseArtViewer {
 
 **Sonifier wiring**: when `sonification.enabled` is true, a `Sonifier` instance is created in `mount()`. `Sonifier.start()` is called inside `enable()` — which is always invoked from a keyboard event handler, satisfying the Web Audio user-gesture requirement. After each cell focus, `sonifyCell()` lazily initialises a `PixelSampler` on the first OSD `<canvas>` child and calls `Sonifier.mapToAudio()` with the sampled pixel data.
 
+**AI wiring**: when `ai` options are provided, `enable()` calls `hydrateAILabels()` asynchronously. It captures the current OSD canvas as a `data:` URL (so Gemini sees what the user sees at that moment), clears the `ArtworkMapClient` cache to force a fresh call, then dispatches `senseArt:ai-loading` on the container before the API call and `senseArt:ai-ready` in the `finally` block. On success, each cell's `aria-label` is updated with the AI-generated description and `GridCell.metadata` is populated. On failure, generic labels remain and no error is surfaced to the user (console warning only).
+
 ---
 
 ### `A11yOverlay`
@@ -271,6 +273,24 @@ User presses ArrowRight
               → AriaLiveEngine.announceCell(row, col, label)
                   → debounce 150ms → live region textContent = message
                   → screen reader announces
+```
+
+### Alt+A (enable) — AI label hydration in background
+
+```
+SenseArtViewer.enable()
+  → mapper.snapshotViewport()
+  → mapClient.clearCache()
+  → hydrateAILabels() [async, non-blocking]
+      → canvas.toDataURL('image/jpeg')          ← current viewport screenshot
+      → container.dispatchEvent('senseArt:ai-loading')  ← UI shows spinner
+      → ArtworkMapClient.getMap(dataUrl, grid)
+          → provider.fetchMap(dataUrl, grid)    ← Gemini API or fixture
+      → for each (r, c): A11yOverlay.updateCellLabel + GridCell.metadata
+      → container.dispatchEvent('senseArt:ai-ready')   ← UI hides spinner
+  → overlay.setInteractive(true)
+  → focusTrap.activate()
+  → focusTrap.focusCell(0, 0, silent)
 ```
 
 ### Enter / Space — zoom into focused cell

@@ -132,23 +132,60 @@ ai: {
 ```
 ```
 
-### Lifecycle in `mount()`
+### Lifecycle: idratazione ad ogni `enable()`
+
+La chiamata AI avviene in `enable()`, non in `mount()`. Questo è intenzionale: l'utente potrebbe zoomare su un dettaglio prima di attivare il layer, e le descrizioni devono riflettere **quello che vede in quel momento**, non la vista iniziale.
 
 ```
-viewer.open fires
-  → SenseArtViewer.mount()
-      → A11yOverlay.render()              ← etichette iniziali: "Regione Alto-Sinistra. Zoom 1x"
-      → scheduleAIHydration()             ← asincrono, non blocca il mount
-          → ArtworkMapClient.getMap(imageUrl, grid)
-              → provider.fetchMap(imageUrl, grid)
-                  → [AI call o fixture]
-              → cache
+Alt+A (o click sul toggle)
+  → SenseArtViewer.enable()
+      → mapper.snapshotViewport()         ← cattura bounds viewport corrente
+      → mapClient.clearCache()            ← forza ri-fetch ad ogni attivazione
+      → hydrateAILabels() [async]         ← non blocca l'attivazione del layer
+          → canvas.toDataURL('image/jpeg') ← screenshot del viewport corrente
+          → dispatch 'senseArt:ai-loading' ← UI mostra "⏳ AI analizza la vista…"
+          → ArtworkMapClient.getMap(dataUrl, grid)
+              → provider.fetchMap(dataUrl, grid)
+                  → [Gemini API call con canvas corrente come immagine]
+                  → parse + validate JSON
+              → cache (keyed su dataUrl + grid)
           → per ogni cella (r, c):
               A11yOverlay.updateCellLabel(r, c, metadata.label)
-              GridCell.metadata = metadata   ← disponibile per sonificazione avanzata
+              GridCell.metadata = metadata
+          → dispatch 'senseArt:ai-ready'  ← UI mostra "✓ Etichette AI pronte"
+      → overlay.setInteractive(true)
+      → focusTrap.activate()
 ```
 
-Il mount è **non bloccante**: la griglia ARIA è immediatamente navigabile con etichette generiche. Le etichette AI arrivano in background e sovrascrivono quelle generiche non appena la risposta è pronta. Se il provider fallisce, le etichette generiche rimangono — degradazione silenziosa.
+L'attivazione del layer è **immediata**: la griglia ARIA è navigabile con etichette generiche mentre l'AI lavora in background (≈1–2s). Se il provider fallisce, le etichette generiche rimangono — degradazione silenziosa.
+
+### Evento di stato AI: `senseArt:ai-loading` / `senseArt:ai-ready`
+
+`SenseArtViewer` dispatcha due eventi custom sul container OSD durante ogni idratazione:
+
+```typescript
+// Inizio chiamata AI
+container.dispatchEvent(new CustomEvent('senseArt:ai-loading', { bubbles: true }))
+
+// Fine (successo o fallimento)
+container.dispatchEvent(new CustomEvent('senseArt:ai-ready', { bubbles: true }))
+```
+
+Il consumer può ascoltarli per aggiornare la UI:
+
+```typescript
+const osdEl = document.getElementById('osd')!
+
+osdEl.addEventListener('senseArt:ai-loading', () => {
+  loadingBadge.style.display = 'inline'
+})
+osdEl.addEventListener('senseArt:ai-ready', () => {
+  loadingBadge.style.display = 'none'
+  readyBadge.style.display = 'inline'
+})
+```
+
+`senseArt:ai-ready` è sempre emesso (nel `finally`), anche in caso di errore — l'indicatore di caricamento non rimane bloccato.
 
 ---
 
@@ -208,15 +245,17 @@ Rispondi ESCLUSIVAMENTE con JSON valido, nessun testo aggiuntivo:
 }
 ```
 
-### Gestione thumbnail IIIF
+### Sorgente immagine: canvas vs URL
 
-Per immagini IIIF, il provider costruisce automaticamente un thumbnail dall'endpoint:
+`GeminiProvider` riceve l'immagine come `data:` URL generato da `canvas.toDataURL()`. Supporta due formati:
 
+- **`data:image/jpeg;base64,...`** — generato da OSD canvas. Il provider estrae il base64 direttamente senza fetch. È la sorgente usata di default: contiene esattamente la viewport visibile.
+- **URL pubblico** — passato esplicitamente in `imageUrl`. Viene scaricato con `fetch()` e convertito in base64. Utile quando si vuole analizzare l'immagine intera anziché il viewport corrente.
+
+Per immagini IIIF di grandi dimensioni (es. 14645×12158 px), usare un thumbnail:
 ```
 https://{iiif-server}/{identifier}/full/800,/0/default.jpg
 ```
-
-Questo evita di inviare l'immagine originale (14645×12158 px per La Ronda di Notte) all'API.
 
 ---
 

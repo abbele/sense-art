@@ -151,11 +151,25 @@ interface SenseArtOptions {
     toneDurationMs?: number  // default: 800ms
   }
   ai?: {
-    imageUrl?: string
-    provider?: 'mock' | 'openai' | 'huggingface' | 'ollama'
+    provider?: 'mock' | 'gemini' | 'openai' | 'huggingface' | 'ollama'  // default: 'gemini'
+    apiKey?: string    // required for 'gemini' and 'openai'
+    model?: string     // overrides per-provider default (e.g. 'gemini-1.5-pro')
+    baseUrl?: string   // custom endpoint (Ollama, Vertex AI, etc.)
+    imageUrl?: string  // fallback when canvas is unavailable
   }
 }
 ```
+
+### AI loading events
+
+`SenseArtViewer` dispatches two custom events on the OSD container during each AI hydration. Use them to show a loading indicator in your UI:
+
+```typescript
+osdEl.addEventListener('senseArt:ai-loading', () => { /* show spinner */ })
+osdEl.addEventListener('senseArt:ai-ready',   () => { /* hide spinner */ })
+```
+
+`senseArt:ai-ready` fires in the `finally` block — always emitted even on provider error, so the spinner never gets stuck. See [AI_INTEGRATION.md](./AI_INTEGRATION.md) for the full integration guide.
 
 ---
 

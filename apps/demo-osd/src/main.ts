@@ -56,5 +56,22 @@ viewer.addOnceHandler('open', () => {
   })
 })
 
+// ─── AI loading indicator ─────────────────────────────────────────────────────
+
+const aiStatus = document.getElementById('ai-status') as HTMLSpanElement
+const aiReady  = document.getElementById('ai-ready')  as HTMLSpanElement
+
+const osdEl = document.getElementById('osd') as HTMLElement
+osdEl.addEventListener('senseArt:ai-loading', () => {
+  aiStatus.style.display = 'inline'
+  aiReady.style.display  = 'none'
+})
+osdEl.addEventListener('senseArt:ai-ready', () => {
+  aiStatus.style.display = 'none'
+  aiReady.style.display  = 'inline'
+  // Hide the "ready" badge after 3s so it doesn't clutter the UI
+  setTimeout(() => { aiReady.style.display = 'none' }, 3000)
+})
+
 // Expose to browser console for manual testing
 ;(window as typeof window & { senseArt: SenseArtViewer }).senseArt = senseArt

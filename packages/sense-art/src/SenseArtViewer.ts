@@ -268,10 +268,14 @@ export class SenseArtViewer {
     const provider = this.buildProvider()
     if (!provider) return
     if (!this.mapClient) this.mapClient = new ArtworkMapClient(provider)
+
+    const container = this.viewer.element as HTMLElement
+    container.dispatchEvent(new CustomEvent('senseArt:ai-loading', { bubbles: true }))
+
     try {
       // Use the current OSD canvas as image source so Gemini sees exactly the
       // viewport the user has open (works after zooming in too).
-      const canvas = (this.viewer.element as HTMLElement).querySelector<HTMLCanvasElement>('canvas')
+      const canvas = container.querySelector<HTMLCanvasElement>('canvas')
       const imageUrl = canvas?.toDataURL('image/jpeg', 0.85) ?? this.aiOptions.imageUrl ?? ''
       const map = await this.mapClient.getMap(imageUrl, this.grid)
       for (let r = 0; r < this.grid.rows; r++) {
@@ -284,6 +288,8 @@ export class SenseArtViewer {
       }
     } catch (err) {
       console.warn('SenseArt: AI label hydration failed', err)
+    } finally {
+      container.dispatchEvent(new CustomEvent('senseArt:ai-ready', { bubbles: true }))
     }
   }
 
